@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#ifndef _DEF_NARVAL_OCULUS_STATUS_LISTENER_H_
-#define _DEF_NARVAL_OCULUS_STATUS_LISTENER_H_
+#ifndef _DEF_OCULUS_DRIVER_STATUS_LISTENER_H_
+#define _DEF_OCULUS_DRIVER_STATUS_LISTENER_H_
 
 #include <iostream>
 
@@ -25,11 +25,11 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-#include <narval_oculus/Oculus.h>
-#include <narval_oculus/CallbackQueue.h>
-#include <narval_oculus/Clock.h>
+#include <oculus_driver/Oculus.h>
+#include <oculus_driver/CallbackQueue.h>
+#include <oculus_driver/Clock.h>
 
-namespace narval { namespace oculus {
+namespace oculus {
 
 class StatusListener
 {
@@ -88,6 +88,5 @@ bool StatusListener::on_next_status(F&& func, Args&&... args)
 }
 
 }; //namespace oculus
-}; //namespace narval
 
-#endif //_DEF_NARVAL_OCULUS_STATUS_LISTENER_H_
+#endif //_DEF_OCULUS_DRIVER_STATUS_LISTENER_H_

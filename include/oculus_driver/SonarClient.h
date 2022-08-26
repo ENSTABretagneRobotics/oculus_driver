@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#ifndef _NARVAL_OCULUS_SONAR_CLIENT_H_
-#define _NARVAL_OCULUS_SONAR_CLIENT_H_
+#ifndef _OCULUS_DRIVER_SONAR_CLIENT_H_
+#define _OCULUS_DRIVER_SONAR_CLIENT_H_
 
 #include <iostream>
 #include <iomanip>
@@ -33,12 +33,12 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-#include <narval_oculus/Oculus.h>
-#include <narval_oculus/utils.h>
-#include <narval_oculus/print_utils.h>
-#include <narval_oculus/StatusListener.h>
+#include <oculus_driver/Oculus.h>
+#include <oculus_driver/utils.h>
+#include <oculus_driver/print_utils.h>
+#include <oculus_driver/StatusListener.h>
 
-namespace narval { namespace oculus {
+namespace oculus {
 
 /**
  * This is the base class to handle an Oculus sonar.
@@ -131,6 +131,5 @@ class SonarClient
 };
 
 }; //namespace oculus
-}; //namespace narval
 
-#endif //_NARVAL_OCULUS_SONAR_CLIENT_H_
+#endif //_OCULUS_DRIVER_SONAR_CLIENT_H_

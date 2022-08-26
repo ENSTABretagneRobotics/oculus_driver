@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,18 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#ifndef _DEF_NARVAL_OCULUS_UTILS_H_
-#define _DEF_NARVAL_OCULUS_UTILS_H_
+#ifndef _DEF_OCULUS_DRIVER_UTILS_H_
+#define _DEF_OCULUS_DRIVER_UTILS_H_
 
 #include <iostream>
 
 #define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/asio.hpp>
 
-#include <narval_oculus/Oculus.h>
-#include <narval_oculus/print_utils.h>
+#include <oculus_driver/Oculus.h>
+#include <oculus_driver/print_utils.h>
 
-namespace narval { namespace oculus {
+namespace oculus {
 
 template <typename EndPointT>
 inline EndPointT remote_from_status(const OculusStatusMsg& status)
@@ -112,6 +112,5 @@ inline bool check_config_feedback(const OculusSimpleFireMessage& requested,
     return false;
 }
 }; //namespace oculus
-}; //namespace narval
 
-#endif //_DEF_NARVAL_OCULUS_UTILS_H_
+#endif //_DEF_OCULUS_DRIVER_UTILS_H_

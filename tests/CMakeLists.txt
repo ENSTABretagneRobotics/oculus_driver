@@ -1,32 +1,20 @@
-cmake_minimum_required(VERSION 3.10)
-project(narval_oculus_tests VERSION 0.1)
+cmake_minimum_required(VERSION 3.16)
+project(oculus_driver_tests VERSION 0.1)
 
-list(APPEND test_names
-    statusraw_test
-    status_display
-    client_test
-    async_client_test
-    config_test
+list(APPEND test_files
+    src/statusraw_test.cpp
+    src/status_display.cpp
+    src/client_test.cpp
+    src/async_client_test.cpp
+    src/config_test.cpp
 )
 
-list(APPEND test_deps
-    narval_oculus
-)
-
-# if(NOT TARGET narval_base)
-#     find_package(narval_base QUIET)
-# endif()
-# if(TARGET narval_base)
-#     list(APPEND test_names oculusfile_test)
-#     list(APPEND test_deps narval_base)
-# endif()
-
-
-foreach(name ${test_names})
-    add_executable(${name} src/${name}.cpp)
-    target_link_libraries(${name} ${test_deps})
-    target_compile_features(${name} PRIVATE cxx_std_14)
-endforeach(name)
+foreach(filename ${test_files})
+    get_filename_component(test_name ${filename} NAME_WE)
+    set(target_name ${test_name}_${PROJECT_NAME})
+    add_executable(${target_name} ${filename})
+    target_link_libraries(${target_name} oculus_driver)
+endforeach()
 
 
 

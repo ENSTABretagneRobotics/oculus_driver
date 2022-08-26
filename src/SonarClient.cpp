@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,9 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#include <narval_oculus/SonarClient.h>
+#include <oculus_driver/SonarClient.h>
 
-namespace narval { namespace oculus {
+namespace oculus {
 
 SonarClient::SonarClient(const IoServicePtr& service,
                          const Duration& checkerPeriod) :
@@ -258,5 +258,4 @@ void SonarClient::handle_message(const OculusMessageHeader& header,
 }
 
 }; //namespace oculus
-}; //namespace narval
 

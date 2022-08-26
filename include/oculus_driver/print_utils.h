@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,15 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#ifndef _DEF_NARVAL_OCULUS_PRINT_UTILS_H_
-#define _DEF_NARVAL_OCULUS_PRINT_UTILS_H_
+#ifndef _DEF_OCULUS_DRIVER_PRINT_UTILS_H_
+#define _DEF_OCULUS_DRIVER_PRINT_UTILS_H_
 
 #include <iostream>
 #include <sstream>
 
-#include <narval_oculus/Oculus.h>
+#include <oculus_driver/Oculus.h>
 
-namespace narval { namespace oculus {
+namespace oculus {
 
 std::string ip_to_string(uint32_t ip);
 std::string mac_to_string(const uint8_t* mac);
@@ -39,7 +39,6 @@ std::string to_string(const OculusSimpleFireMessage& msg, const std::string& pre
 std::string to_string(const OculusSimplePingResult& msg,  const std::string& prefix = "\n- ");
 
 }; //namespace oculus
-}; //namespace narval
 
 std::ostream& operator<<(std::ostream& os, DataSizeType dataType);
 std::ostream& operator<<(std::ostream& os, PingRateType pingRate);
@@ -50,4 +49,4 @@ std::ostream& operator<<(std::ostream& os, const OculusStatusMsg& msg);
 std::ostream& operator<<(std::ostream& os, const OculusSimpleFireMessage& msg);
 std::ostream& operator<<(std::ostream& os, const OculusSimplePingResult& msg);
 
-#endif //_DEF_NARVAL_OCULUS_PRINT_UTILS_H_
+#endif //_DEF_OCULUS_DRIVER_PRINT_UTILS_H_

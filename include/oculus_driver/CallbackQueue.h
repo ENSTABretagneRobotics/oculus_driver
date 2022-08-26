@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#ifndef _DEF_NARVAL_OCULUS_CALLBACK_QUEUE_H_
-#define _DEF_NARVAL_OCULUS_CALLBACK_QUEUE_H_
+#ifndef _DEF_OCULUS_DRIVER_CALLBACK_QUEUE_H_
+#define _DEF_OCULUS_DRIVER_CALLBACK_QUEUE_H_
 
 #include <functional>
 #include <unordered_map>
@@ -27,7 +27,7 @@
 
 #include <thread>
 
-namespace narval { namespace oculus {
+namespace oculus {
 
 template <class ...ArgTypes>
 class CallbackQueue
@@ -155,6 +155,5 @@ void CallbackQueue<ArgTypes...>::call(ArgTypes... args)
 }
 
 }; //namespace oculus
-}; //namespace narval
 
-#endif //_DEF_NARVAL_OCULUS_CALLBACK_QUEUE_H_
+#endif //_DEF_OCULUS_DRIVER_CALLBACK_QUEUE_H_

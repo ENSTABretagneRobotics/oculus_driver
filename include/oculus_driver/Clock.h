@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,13 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#ifndef _DEF_NARVAL_OCULUS_CLOCK_H_
-#define _DEF_NARVAL_OCULUS_CLOCK_H_
+#ifndef _DEF_OCULUS_DRIVER_CLOCK_H_
+#define _DEF_OCULUS_DRIVER_CLOCK_H_
 
 #include <iostream>
 #include <chrono>
 
-namespace narval { namespace oculus {
+namespace oculus {
 
 /** 
  * Simple type to measure time less verbose than std::chrono.
@@ -67,12 +67,11 @@ class Clock
 };
 
 }; //namespace oculus
-}; //namespace narval
 
-inline std::ostream& operator<<(std::ostream& os, const narval::oculus::Clock& clock)
+inline std::ostream& operator<<(std::ostream& os, const oculus::Clock& clock)
 {
     os << clock.now() << "s";
     return os;
 }
 
-#endif //_DEF_NARVAL_OCULUS_CLOCK_H_
+#endif //_DEF_OCULUS_DRIVER_CLOCK_H_

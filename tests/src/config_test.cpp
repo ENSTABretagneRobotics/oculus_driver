@@ -1,5 +1,5 @@
 /******************************************************************************
- * narval_oculus driver library for Blueprint Subsea Oculus sonar.
+ * oculus_driver driver library for Blueprint Subsea Oculus sonar.
  * Copyright (C) 2020 ENSTA-Bretagne
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -21,9 +21,9 @@
 #include <thread>
 using namespace std;
 
-#include <narval_oculus/AsyncService.h>
-#include <narval_oculus/SonarDriver.h>
-using namespace narval::oculus;
+#include <oculus_driver/AsyncService.h>
+#include <oculus_driver/SonarDriver.h>
+using namespace oculus;
 
 void print_ping(const OculusSimplePingResult& pingMetadata,
                 const std::vector<uint8_t>& pingData)
