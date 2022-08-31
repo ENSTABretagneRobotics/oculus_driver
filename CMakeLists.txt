@@ -2,20 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project(oculus_driver VERSION 0.1)
 
 find_package(Boost COMPONENTS system thread REQUIRED)
-message(STATUS "Boost version  : ${Boost_VERSION}")
-message(STATUS "Boost location : ${Boost_INCLUDE_DIRS}")
-
-list(APPEND oculus_driver_headers
-    include/oculus_driver/Oculus.h
-    include/oculus_driver/utils.h
-    include/oculus_driver/print_utils.h
-    include/oculus_driver/Clock.h
-    include/oculus_driver/CallbackQueue.h
-    include/oculus_driver/StatusListener.h
-    include/oculus_driver/SonarClient.h
-    include/oculus_driver/SonarDriver.h
-    include/oculus_driver/AsyncService.h
-)
 
 add_library(oculus_driver SHARED
     src/print_utils.cpp
@@ -38,10 +24,48 @@ target_link_libraries(oculus_driver PUBLIC
 )
 target_compile_features(oculus_driver PUBLIC cxx_std_17)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/narval_installation.cmake)
-narval_install_target(oculus_driver)
+#############
+## Install ##
+#############
+include(GNUInstallDirs)
 
-# add_subdirectory(tools)
+install(DIRECTORY include/oculus_driver
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(TARGETS ${PROJECT_NAME}
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        EXPORT ${PROJECT_NAME}Targets)
+
+# install the exported targets
+install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME}Targets.cmake
+    # NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+############
+## Config ##
+############
+include(CMakePackageConfigHelpers)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+    PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR
+)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    VERSION "${CMAKE_PROJECT_VERSION}"
+    COMPATIBILITY AnyNewerVersion
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION lib/cmake/${PROJECT_NAME}
+)
+export(EXPORT ${PROJECT_NAME}Targets
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
+)
+
 add_subdirectory(tests)
 
 
