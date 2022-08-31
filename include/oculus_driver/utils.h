@@ -111,6 +111,6 @@ inline bool check_config_feedback(const OculusSimpleFireMessage& requested,
     }
     return false;
 }
-}; //namespace oculus
+} //namespace oculus
 
 #endif //_DEF_OCULUS_DRIVER_UTILS_H_

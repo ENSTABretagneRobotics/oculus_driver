@@ -83,4 +83,4 @@ bool StatusListener::on_next_status(const CallbackT& callback)
     return callbacks_.add_single_shot(callback);
 }
 
-}; //namespace oculus
+} //namespace oculus

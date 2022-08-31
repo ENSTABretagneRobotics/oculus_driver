@@ -71,4 +71,4 @@ void AsyncService::stop()
     std::cout << "stopped" << std::endl;
 }
 
-}; //namespace oculus
+} //namespace oculus

@@ -66,7 +66,7 @@ class Clock
     } 
 };
 
-}; //namespace oculus
+} //namespace oculus
 
 inline std::ostream& operator<<(std::ostream& os, const oculus::Clock& clock)
 {

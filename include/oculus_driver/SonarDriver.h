@@ -182,7 +182,7 @@ bool SonarDriver::on_next_message(F&& func, Args&&... args)
 }
 
 
-}; //namespace oculus
+} //namespace oculus
 
 #endif //_DEF_OCULUS_DRIVER_SONAR_DRIVER_H_
 

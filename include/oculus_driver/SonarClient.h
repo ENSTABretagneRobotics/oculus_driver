@@ -130,6 +130,6 @@ class SonarClient
     TimePoint last_header_stamp() const { return recvTime_; }
 };
 
-}; //namespace oculus
+} //namespace oculus
 
 #endif //_OCULUS_DRIVER_SONAR_CLIENT_H_

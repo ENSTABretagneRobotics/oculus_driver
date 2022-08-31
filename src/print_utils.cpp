@@ -185,7 +185,7 @@ std::string to_string(const OculusSimplePingResult& msg, const std::string& pref
     return oss.str();
 }
 
-}; //namespace oculus
+} //namespace oculus
 
 std::ostream& operator<<(std::ostream& os, DataSizeType dataType)
 {

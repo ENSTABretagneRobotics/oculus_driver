@@ -278,5 +278,5 @@ bool SonarDriver::wait_next_message()
     return this->on_next_message(dummy);
 }
 
-}; //namespace oculus
+} //namespace oculus
 

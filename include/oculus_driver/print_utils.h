@@ -38,7 +38,7 @@ std::string to_string(const OculusStatusMsg& msg,         const std::string& pre
 std::string to_string(const OculusSimpleFireMessage& msg, const std::string& prefix = "\n- ");
 std::string to_string(const OculusSimplePingResult& msg,  const std::string& prefix = "\n- ");
 
-}; //namespace oculus
+} //namespace oculus
 
 std::ostream& operator<<(std::ostream& os, DataSizeType dataType);
 std::ostream& operator<<(std::ostream& os, PingRateType pingRate);

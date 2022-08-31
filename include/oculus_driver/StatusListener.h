@@ -87,6 +87,6 @@ bool StatusListener::on_next_status(F&& func, Args&&... args)
         std::bind(func, args..., std::placeholders::_1)));
 }
 
-}; //namespace oculus
+} //namespace oculus
 
 #endif //_DEF_OCULUS_DRIVER_STATUS_LISTENER_H_

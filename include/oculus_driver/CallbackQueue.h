@@ -154,6 +154,6 @@ void CallbackQueue<ArgTypes...>::call(ArgTypes... args)
     sShotsCv_.notify_all();
 }
 
-}; //namespace oculus
+} //namespace oculus
 
 #endif //_DEF_OCULUS_DRIVER_CALLBACK_QUEUE_H_

@@ -257,5 +257,5 @@ void SonarClient::handle_message(const OculusMessageHeader& header,
     // To be reimplemented in a subclass
 }
 
-}; //namespace oculus
+} //namespace oculus
 

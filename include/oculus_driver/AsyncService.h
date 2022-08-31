@@ -54,6 +54,6 @@ class AsyncService
     void stop();
 };
 
-}; //namespace oculus
+} //namespace oculus
 
 #endif //_DEF_OCULUS_DRIVER_ASYNC_SERVICE_H_
