@@ -41,7 +41,7 @@ install(TARGETS ${PROJECT_NAME}
 # install the exported targets
 install(EXPORT ${PROJECT_NAME}Targets
     FILE ${PROJECT_NAME}Targets.cmake
-    NAMESPACE ${PROJECT_NAME}::
+    # NAMESPACE ${PROJECT_NAME}:: # namespacing does not play well with fetch content
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
@@ -65,6 +65,7 @@ install(FILES
     DESTINATION lib/cmake/${PROJECT_NAME}
 )
 export(EXPORT ${PROJECT_NAME}Targets
+    # NAMESPACE ${PROJECT_NAME}:: # namespacing does not play well with fetch content
     FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
 )
 
