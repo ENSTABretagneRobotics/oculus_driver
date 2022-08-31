@@ -39,7 +39,7 @@ install(TARGETS ${PROJECT_NAME}
 # install the exported targets
 install(EXPORT ${PROJECT_NAME}Targets
     FILE ${PROJECT_NAME}Targets.cmake
-    # NAMESPACE ${PROJECT_NAME}::
+    NAMESPACE ${PROJECT_NAME}::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
