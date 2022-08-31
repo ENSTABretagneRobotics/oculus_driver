@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(oculus_driver VERSION 0.1)
 
+option(BUILD_TESTS "Build unit tests" OFF)
+
 find_package(Boost COMPONENTS system thread REQUIRED)
 
 add_library(oculus_driver SHARED
@@ -66,6 +68,8 @@ export(EXPORT ${PROJECT_NAME}Targets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake"
 )
 
-add_subdirectory(tests)
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
 
 
