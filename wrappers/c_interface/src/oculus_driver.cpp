@@ -1,22 +1,12 @@
 #include <oculus_driver_c/oculus_driver.h>
 
-#include <oculus_driver/AsyncService.h>
-#include <oculus_driver/SonarDriver.h>
-
 #include <functional>
+
+#include <oculus_driver_c/OculusHandle.h>
+using namespace oculus;
 
 struct oculus_handle {
     void* handle;
-};
-
-struct OculusHandle
-{
-    oculus::AsyncService ioService_;
-    oculus::SonarDriver  sonar_;
-
-    OculusHandle() :
-        sonar_(ioService_.io_service())
-    {}
 };
 
 OculusHandle* get(oculus_handle_t* handle)
@@ -46,12 +36,12 @@ void oculus_handle_destroy(oculus_handle_t* handle)
 
 void oculus_start(oculus_handle_t* handle)
 {
-    get(handle)->ioService_.start();
+    get(handle)->start();
 }
 
 void oculus_stop(oculus_handle_t* handle)
 {
-    get(handle)->ioService_.stop();
+    get(handle)->stop();
 }
 
 void message_callback_wrapper(void (*callback)(OculusMessageHeader, uint64_t, const uint8_t*),
@@ -64,10 +54,10 @@ void message_callback_wrapper(void (*callback)(OculusMessageHeader, uint64_t, co
 void oculus_add_message_callback(oculus_handle_t* handle,
     void (*callback)(OculusMessageHeader, uint64_t, const uint8_t*))
 {
-    get(handle)->sonar_.add_message_callback(std::bind(message_callback_wrapper,
-                                                       callback, 
-                                                       std::placeholders::_1,
-                                                       std::placeholders::_2));
+    get(handle)->add_message_callback(std::bind(message_callback_wrapper,
+                                                callback, 
+                                                std::placeholders::_1,
+                                                std::placeholders::_2));
 }
 
 void ping_callback_wrapper(void (*callback)(OculusSimplePingResult, size_t, const uint8_t*),
@@ -80,10 +70,14 @@ void ping_callback_wrapper(void (*callback)(OculusSimplePingResult, size_t, cons
 void oculus_add_ping_callback(oculus_handle_t* handle,
     void (*callback)(OculusSimplePingResult, size_t, const uint8_t*))
 {
-    get(handle)->sonar_.add_ping_callback(std::bind(ping_callback_wrapper,
-                                                    callback, 
-                                                    std::placeholders::_1,
-                                                    std::placeholders::_2));
+    get(handle)->add_ping_callback(std::bind(ping_callback_wrapper,
+                                             callback, 
+                                             std::placeholders::_1,
+                                             std::placeholders::_2));
 }
 
-
+void oculus_add_status_callback(oculus_handle_t* handle,
+                                void (*callback)(OculusStatusMsg))
+{
+    get(handle)->add_status_callback(callback);
+}

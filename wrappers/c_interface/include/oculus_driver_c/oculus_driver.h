@@ -20,6 +20,8 @@ void oculus_add_message_callback(oculus_handle_t* handle,
     void (*callback)(OculusMessageHeader, uint64_t, const uint8_t*));
 void oculus_add_ping_callback(oculus_handle_t* handle,
     void (*callback)(OculusSimplePingResult, uint64_t, const uint8_t*));
+void oculus_add_status_callback(oculus_handle_t* handle,
+    void (*callback)(OculusStatusMsg));
 
 #ifdef __cplusplus
 } // extern "C"
