@@ -49,8 +49,8 @@ class SonarDriver : public SonarClient
 
     protected:
 
-    PingConfig   lastConfig_;
-    PingRateType lastPingRate_;
+    PingConfig lastConfig_;
+    uint8_t    lastPingRate_;
 
     PingCallbacks    pingCallbacks_;
     DummyCallbacks   dummyCallbacks_;

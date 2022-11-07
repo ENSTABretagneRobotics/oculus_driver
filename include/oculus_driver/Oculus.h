@@ -32,7 +32,7 @@
 // The test id contained in the oculus header file
 #define OCULUS_CHECK_ID 0x4f53
 
-enum OculusMasterStatusType : uint8_t
+enum OculusMasterStatusType // : uint8_t
 {
   oculusMasterStatusSsblBoot,
   oculusMasterStatusSsblRun,
@@ -40,7 +40,7 @@ enum OculusMasterStatusType : uint8_t
   oculusMasterStatusMainRun,
 };
 
-enum OculusPauseReasonType : uint8_t
+enum OculusPauseReasonType // : uint8_t
 {
   oculusPauseMagSwitch,
   oculusPauseBootFromMain,
@@ -48,7 +48,7 @@ enum OculusPauseReasonType : uint8_t
   oculusPauseJtagLoad,
 };
 
-enum OculusTemperatureStatusType : uint8_t
+enum OculusTemperatureStatusType // : uint8_t
 {
   oculusTempGood,
   oculusTempOverheat,
@@ -57,14 +57,14 @@ enum OculusTemperatureStatusType : uint8_t
 };
 
 // -----------------------------------------------------------------------------
-enum OculusDeviceType : uint16_t
+enum OculusDeviceType // : uint16_t
 {
   deviceTypeUndefined		= 0,
   deviceTypeImagingSonar 	= 1,
 };
 
 // -----------------------------------------------------------------------------
-enum OculusMessageType : uint16_t
+enum OculusMessageType // : uint16_t
 {
   messageSimpleFire         = 0x15,
   messagePingResult         = 0x22,
@@ -73,7 +73,7 @@ enum OculusMessageType : uint16_t
   messageDummy              = 0xff,
 };
 
-enum PingRateType : uint8_t
+enum PingRateType // : uint8_t
 {
   pingRateNormal  = 0x00, // 10Hz max ping rate
   pingRateHigh    = 0x01, // 15Hz max ping rate
@@ -84,7 +84,7 @@ enum PingRateType : uint8_t
 };
 
 // -----------------------------------------------------------------------------
-enum DataSizeType : uint8_t
+enum DataSizeType // : uint8_t
 {
   dataSize8Bit,
   dataSize16Bit,
@@ -93,7 +93,7 @@ enum DataSizeType : uint8_t
 };
 
 // -----------------------------------------------------------------------------
-enum OculusPartNumberType : uint16_t
+enum OculusPartNumberType // : uint16_t
 {
 	partNumberUndefined			= 0,
 
@@ -117,9 +117,10 @@ enum OculusPartNumberType : uint16_t
 
 	partNumberEnd				= 0xFFFF
 };
-struct OculusMessageHeader
+
+typedef struct 
 {
-public:
+//public:
   uint16_t oculusId;         // Fixed ID 0x4f53
   uint16_t srcDeviceId;      // The device id of the source
   uint16_t dstDeviceId;      // The device id of the destination
@@ -127,18 +128,18 @@ public:
   uint16_t msgVersion;
   uint32_t payloadSize;      // The size of the message payload (header not included)
   uint16_t spare2;
-};
+} OculusMessageHeader;
 
 // -----------------------------------------------------------------------------
 typedef struct 
 {
-public:
+//public:
   OculusMessageHeader head;     // The standard message header
 
   uint8_t masterMode;           // mode 0 is flexi mode, needs full fire message (not available for third party developers)
                                 // mode 1 - Low Frequency Mode (wide aperture, navigation)
                                 // mode 2 - High Frequency Mode (narrow aperture, target identification)
-  PingRateType pingRate;        // Sets the maximum ping rate.
+  uint8_t pingRate;        // Sets the maximum ping rate. was PingRateType
   uint8_t networkSpeed;         // Used to reduce the network comms speed (useful for high latency shared links)
   uint8_t gammaCorrection;      // 0 and 0xff = gamma correction = 1.0
                                 // Set to 127 for gamma correction = 0.5
@@ -159,7 +160,7 @@ public:
 typedef struct {
 	OculusMessageHeader head;
 	uint8_t masterMode;
-	PingRateType pingRate;
+	uint8_t pingRate; // was PingRateType
 	uint8_t networkSpeed; /* The max network speed in Mbs , set to 0x00 or 0xff to use link speed */
 	uint8_t gammaCorrection; /* The gamma correction - 255 is equal to a gamma correction of 1.0 */
 	uint8_t flags;
@@ -174,7 +175,7 @@ typedef struct {
 // -----------------------------------------------------------------------------
 typedef struct 
 {
-public:
+//public:
     OculusSimpleFireMessage fireMessage;
     uint32_t pingId; 			/* An incrementing number */
     uint32_t status;
@@ -183,7 +184,7 @@ public:
     double pressure;				/* The external pressure (bar) */
     double speeedOfSoundUsed;		/* The actual used speed of sound (m/s). May be different to the speed of sound set in the fire message */
     uint32_t pingStartTime;
-    DataSizeType dataSize; 			/* The size of the individual data entries */
+    uint8_t dataSize; 			/* The size of the individual data entries */  // was DataSizeType
     double rangeResolution;			/* The range in metres corresponding to a single range line */
     uint16_t nRanges;			/* The number of range lines in the image*/
     uint16_t nBeams;			/* The number of bearings in the image */
@@ -196,6 +197,7 @@ public:
     // short bearings[];
     // The bearings to each of the beams in 0.01 degree resolution
 } OculusSimplePingResult;
+
 typedef struct {
 	OculusSimpleFireMessage2 fireMessage;
 	uint32_t pingId; 		/* An incrementing number */
@@ -208,7 +210,7 @@ typedef struct {
 	double roll;			/* The roll (degrees) */
 	double speeedOfSoundUsed;	/* The actual used speed of sound (m/s) */
 	double pingStartTime;		/* In seconds from sonar powerup (to microsecond resolution) */
-	DataSizeType dataSize; 		/* The size of the individual data entries */
+	uint8_t dataSize; 		/* The size of the individual data entries */ // was DataSizeType
 	double rangeResolution;		/* The range in metres corresponding to a single range line */
 	uint16_t nRanges;		/* The number of range lines in the image*/
 	uint16_t nBeams;		/* The number of bearings in the image */
@@ -223,26 +225,26 @@ typedef struct {
 } OculusSimplePingResult2;
 
 // -----------------------------------------------------------------------------
-struct OculusVersionInfo
+typedef struct 
 {
-public:
+//public:
   uint32_t firmwareVersion0; 	/* The arm0 firmware version major(8 bits), minor(8 bits), build (16 bits) */
   uint32_t firmwareDate0; 		/* The arm0 firmware date */
   uint32_t firmwareVersion1;  	/* The arm1 firmware version major(8 bits), minor(8 bits), build (16 bits) */
   uint32_t firmwareDate1;		/* The arm1 firmware date */
   uint32_t firmwareVersion2;	/* The bitfile version */
   uint32_t firmwareDate2;		/* The bitfile date */
-};
+} OculusVersionInfo;
 
 // -----------------------------------------------------------------------------
-struct OculusStatusMsg
+typedef struct 
 {
-public:
+//public:
   OculusMessageHeader hdr;
 
   uint32_t   deviceId;
-  OculusDeviceType   deviceType;
-  OculusPartNumberType partNumber;
+  uint16_t   deviceType; // was OculusDeviceType
+  uint16_t partNumber; // was OculusPartNumberType
   uint32_t   status;
   OculusVersionInfo versinInfo;
   uint32_t   ipAddr;
@@ -263,7 +265,7 @@ public:
   double temperature6;
   double temperature7;
   double pressure;
-};
+} OculusStatusMsg;
 
 typedef struct {
 	uint32_t ipAddr;
@@ -271,10 +273,11 @@ typedef struct {
 	uint32_t dhcpEnable;
 } OculusUserConfig;
 
-struct OculusUserConfigMessage {
+typedef struct
+{
 	OculusMessageHeader head;
 	OculusUserConfig config;
-};
+} OculusUserConfigMessage;
 
 typedef struct
 {
@@ -506,20 +509,21 @@ typedef struct
 //#include <QString> // what is this doing here ??
 
 // Oculus configuration information
-struct OculusInfo {
+typedef struct
+{
 	// Part number for which the info relates to
-	OculusPartNumberType partNumber;
+	uint16_t partNumber; // was OculusPartNumberType
 	// Has a low-frequency mode
-	bool hasLF;
+	uint8_t hasLF;
 	// Maximum low-frequency range
 	double maxLF;
 	// Has a high-frequency mode
-	bool hasHF;
+	uint8_t hasHF;
 	// Maximum high-frequency range
 	double maxHF;
 	// Description
 	char* model;
-};
+} OculusInfo;
 
 #pragma pack(pop)
 
@@ -531,11 +535,11 @@ const OculusInfo OculusSonarInfo[] = {
 	{
 		partNumberUndefined,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 120m range
 		120,
 		// Supports HF mode
-		true,
+		0x1,
 		// Up to 40m range
 		40,
 	},
@@ -544,11 +548,11 @@ const OculusInfo OculusSonarInfo[] = {
 	{
 		partNumberM370s,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 200m range
 		200,
 		// No HF mode
-		false,
+		0x0,
 		// Up to 40m range
 		-1
 	},
@@ -556,44 +560,44 @@ const OculusInfo OculusSonarInfo[] = {
 	{
 		partNumberM370s_Artemis,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 200m range
 		200,
 		// No HF mode
-		false,
+		0x0,
 		-1
 	},
 	// M370s_Deep
 	{
 		partNumberM370s_Deep,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 200m range
 		200,
 		// No HF mode
-		false,
+		0x0,
 		-1
 	},
 	// M373
 	{
 		partNumberM373s,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 200m range
 		200,
 		// No HF mode
-		false,
+		0x0,
 		-1
 	},
 	// M373s_Deep
 	{
 		partNumberM373s_Deep,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 200m range
 		200,
 		// No HF mode
-		false,
+		0x0,
 		-1
 	},
 	// -------------------------------------------------------------------------
@@ -601,22 +605,22 @@ const OculusInfo OculusSonarInfo[] = {
 	{
 		partNumberM1200d,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 40m range
 		40,
 		// Supports HF mode
-		true,
+		0x1,
 		// Up to 10m range
 		10
 	},
 	{
 		partNumberM1200d_Deep,
 		// Supports LF mode
-		true,
+		0x1,
 		// Up to 40m range
 		40,
 		// Supports HF mode
-		true,
+		0x1,
 		// Up to 10m range
 		10
 	},
