@@ -86,6 +86,7 @@ PYBIND11_MODULE(oculus_python, m_)
         .def_readwrite("msgId",       &OculusMessageHeader::msgId)
         .def_readwrite("msgVersion",  &OculusMessageHeader::msgVersion)
         .def_readwrite("payloadSize", &OculusMessageHeader::payloadSize)
+        .def_readwrite("spare2",      &OculusMessageHeader::spare2)
         .def("__str__", [](const OculusMessageHeader& header) {
             std::ostringstream oss;
             oss << header;
