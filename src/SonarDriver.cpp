@@ -175,7 +175,8 @@ void SonarDriver::handle_message(const OculusMessageHeader& header,
                 lastConfig_.gainPercent = (lastConfig_.gainPercent - 40.0) * 100.0 / 60.0;
             }
             break;
-        default:
+        //default:
+        case messageDummy:
             lastConfig_.pingRate = pingRateStandby;
             break;
     };

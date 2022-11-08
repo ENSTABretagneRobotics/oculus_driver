@@ -60,6 +60,14 @@ struct OculusPythonHandle
     void start() { service_.start(); }
     void stop()  { service_.stop();  }
 
+    bool send_config(py::object obj) {
+        return sonar_.send_ping_config(*obj.cast<const OculusSimpleFireMessage*>());
+    }
+
+    py::object current_config() const {
+        return py::cast(sonar_.last_ping_config());
+    }
+
     void add_message_callback(py::object obj) {
         sonar_.add_message_callback(std::bind(message_callback_wrapper, obj,
                                               std::placeholders::_1, 
@@ -182,10 +190,13 @@ PYBIND11_MODULE(oculus_python, m_)
 
     py::class_<OculusPythonHandle>(m_, "OculusSonar")
         .def(py::init<>())
-        .def("start", &OculusPythonHandle::start)
-        .def("stop",  &OculusPythonHandle::stop)
+        .def("start",       &OculusPythonHandle::start)
+        .def("stop",        &OculusPythonHandle::stop)
+
+        .def("send_config",    &OculusPythonHandle::send_config)
+        .def("current_config", &OculusPythonHandle::current_config)
 
         .def("add_message_callback", &OculusPythonHandle::add_message_callback)
-        .def("add_ping_callback", &OculusPythonHandle::add_ping_callback)
-        .def("add_status_callback", &OculusPythonHandle::add_status_callback);
+        .def("add_ping_callback",    &OculusPythonHandle::add_ping_callback)
+        .def("add_status_callback",  &OculusPythonHandle::add_status_callback);
 }

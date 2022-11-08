@@ -154,7 +154,7 @@ std::string to_string(const OculusSimpleFireMessage& msg, const std::string& pre
 {
     std::ostringstream oss;
     oss << prefix << "masterMode      : " << (int)msg.masterMode
-        << prefix << "pingRate        : " << msg.pingRate
+        << prefix << "pingRate        : " << (int)msg.pingRate
         << prefix << "networkSpeed    : " << (int)msg.networkSpeed
         << prefix << "gammaCorrection : " << (int)msg.gammaCorrection
         << prefix << "flags           : " << std::hex <<(int)msg.flags
