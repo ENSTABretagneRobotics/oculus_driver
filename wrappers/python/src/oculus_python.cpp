@@ -68,6 +68,10 @@ struct OculusPythonHandle
         return py::cast(sonar_.last_ping_config());
     }
 
+    py::object request_config(py::object obj) {
+        return py::cast(sonar_.request_ping_config(*obj.cast<const OculusSimpleFireMessage*>()));
+    }
+
     void add_message_callback(py::object obj) {
         sonar_.add_message_callback(std::bind(message_callback_wrapper, obj,
                                               std::placeholders::_1, 
@@ -108,7 +112,7 @@ PYBIND11_MODULE(oculus_python, m_)
         .def_readwrite("pingRate",        &OculusSimpleFireMessage::pingRate)
         .def_readwrite("networkSpeed",    &OculusSimpleFireMessage::networkSpeed)
         .def_readwrite("gammaCorrection", &OculusSimpleFireMessage::gammaCorrection)
-        .def_readonly( "flags",           &OculusSimpleFireMessage::flags)
+        .def_readwrite("flags",           &OculusSimpleFireMessage::flags)
         .def_readwrite("range",           &OculusSimpleFireMessage::range)
         .def_readwrite("gainPercent",     &OculusSimpleFireMessage::gainPercent)
         .def_readwrite("speedOfSound",    &OculusSimpleFireMessage::speedOfSound)
@@ -194,6 +198,7 @@ PYBIND11_MODULE(oculus_python, m_)
         .def("stop",        &OculusPythonHandle::stop)
 
         .def("send_config",    &OculusPythonHandle::send_config)
+        .def("request_config", &OculusPythonHandle::request_config)
         .def("current_config", &OculusPythonHandle::current_config)
 
         .def("add_message_callback", &OculusPythonHandle::add_message_callback)
