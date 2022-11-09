@@ -47,6 +47,18 @@ void status_callback_wrapper(py::object callback,
     PyGILState_Release(gstate);
 }
 
+void config_callback_wrapper(py::object callback, 
+                             const OculusSimpleFireMessage& lastConfig,
+                             const OculusSimpleFireMessage& newConfig)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    
+    callback(py::cast(&lastConfig), py::cast(&newConfig));
+    
+    PyGILState_Release(gstate);
+}
+
 struct OculusPythonHandle
 {
     oculus::AsyncService    service_;
@@ -85,6 +97,11 @@ struct OculusPythonHandle
     void add_status_callback(py::object obj) {
         sonar_.add_status_callback(std::bind(status_callback_wrapper, obj,
                                              std::placeholders::_1));
+    }
+    void add_config_callback(py::object obj) {
+        sonar_.add_config_callback(std::bind(config_callback_wrapper, obj,
+                                             std::placeholders::_1,
+                                             std::placeholders::_2));
     }
 };
 
@@ -203,5 +220,6 @@ PYBIND11_MODULE(oculus_python, m_)
 
         .def("add_message_callback", &OculusPythonHandle::add_message_callback)
         .def("add_ping_callback",    &OculusPythonHandle::add_ping_callback)
-        .def("add_status_callback",  &OculusPythonHandle::add_status_callback);
+        .def("add_status_callback",  &OculusPythonHandle::add_status_callback)
+        .def("add_config_callback",  &OculusPythonHandle::add_config_callback);
 }
