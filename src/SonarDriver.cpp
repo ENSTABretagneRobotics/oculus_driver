@@ -153,33 +153,32 @@ void SonarDriver::on_connect()
 void SonarDriver::handle_message(const OculusMessageHeader& header,
                                  const std::vector<uint8_t>& data)
 {
-    // Setting lastConfig_ BEFORE calling any callback.
+    OculusSimpleFireMessage newConfig = lastConfig_;
     switch(header.msgId) {
         case messageSimplePingResult:
-            {
-                // Overwritting pingRate. The feedback of the sonar on this
-                // parameter is broken.  lastConfig_.pingRate have been set in
-                // send_ping_config().  (Bracket block is to keep the temporary
-                // lastPingRate variable local to this block.)
-                auto lastPingRate = lastConfig_.pingRate;
-                lastConfig_ = reinterpret_cast<const PingResult*>(data.data())->fireMessage;
-                lastConfig_.pingRate = lastPingRate;
-            }
+            newConfig = reinterpret_cast<const OculusSimplePingResult*>(data.data())->fireMessage;
+            newConfig.pingRate = lastConfig_.pingRate; // feedback is broken on pingRate
             // When masterMode = 2, the sonar force gainPercent between 40& and
             // 100%, BUT still needs resquested gainPercent to be between 0%
             // and 100%. (If you request a gainPercent=0 in masterMode=2, the
             // fireMessage in the ping results will be 40%). The gainPercent is
             // rescaled here to ensure consistent parameter handling on client
             // side).
-            if(lastConfig_.masterMode == 2) {
-                lastConfig_.gainPercent = (lastConfig_.gainPercent - 40.0) * 100.0 / 60.0;
+            if(newConfig.masterMode == 2) {
+                newConfig.gainPercent = (newConfig.gainPercent - 40.0) * 100.0 / 60.0;
             }
             break;
-        //default:
         case messageDummy:
-            lastConfig_.pingRate = pingRateStandby;
+            newConfig.pingRate = pingRateStandby;
+            break;
+        default:
             break;
     };
+
+    if(config_changed(lastConfig_, newConfig)) {
+        configCallbacks_.call(lastConfig_, newConfig);
+    }
+    lastConfig_ = newConfig;
 
     // Calling generic message callbacks first (in case we want to do something
     // before calling the specialized callbacks).
@@ -277,6 +276,12 @@ bool SonarDriver::wait_next_message()
 {
     auto dummy = [](const OculusMessageHeader&, const std::vector<uint8_t>&) {};
     return this->on_next_message(dummy);
+}
+
+unsigned int SonarDriver::add_config_callback(
+    const std::function<void(const PingConfig&, const PingConfig&)>& callback)
+{
+    return configCallbacks_.add_callback(callback);
 }
 
 } //namespace oculus

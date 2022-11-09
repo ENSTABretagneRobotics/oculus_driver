@@ -43,6 +43,7 @@ class SonarDriver : public SonarClient
     using DummyCallbacks   = CallbackQueue<const OculusMessageHeader&>;
     using MessageCallbacks = CallbackQueue<const OculusMessageHeader&,
                                            const std::vector<uint8_t>&>;
+    using ConfigCallback = CallbackQueue<const PingConfig&, const PingConfig&>;
 
     using TimeSource = SonarClient::TimeSource;
     using TimePoint  = typename std::invoke_result<decltype(&TimeSource::now)>::type;
@@ -55,6 +56,8 @@ class SonarDriver : public SonarClient
     PingCallbacks    pingCallbacks_;
     DummyCallbacks   dummyCallbacks_;
     MessageCallbacks messageCallbacks_; // will be called on every received message.
+    ConfigCallback   configCallbacks_;  // will be called on (detectable)
+                                        // configuration changes.
 
     public:
 
@@ -118,6 +121,9 @@ class SonarDriver : public SonarClient
     bool on_next_message(F&& func, Args&&... args);
     bool on_next_message(const MessageCallbacks::CallbackT& callback);
     bool wait_next_message();
+
+    unsigned int add_config_callback(
+        const std::function<void(const PingConfig&, const PingConfig&)>& callback);
 };
 
 // status callbacks
