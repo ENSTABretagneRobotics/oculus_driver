@@ -128,6 +128,9 @@ struct OculusPythonHandle
     {
         recorder_.write(header, data, sonar_.last_header_stamp());
     }
+    bool is_recording() const {
+        return recorder_.is_open();
+    }
 };
 
 PYBIND11_MODULE(oculus_python, m_)
@@ -249,5 +252,6 @@ PYBIND11_MODULE(oculus_python, m_)
         .def("add_config_callback",  &OculusPythonHandle::add_config_callback)
 
         .def("recorder_start", &OculusPythonHandle::recorder_start)
-        .def("recorder_stop",  &OculusPythonHandle::recorder_stop);
+        .def("recorder_stop",  &OculusPythonHandle::recorder_stop)
+        .def("is_recording",   &OculusPythonHandle::is_recording);
 }
