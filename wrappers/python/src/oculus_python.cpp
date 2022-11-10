@@ -4,6 +4,7 @@ namespace py = pybind11;
 #include <oculus_driver/Oculus.h>
 #include <oculus_driver/AsyncService.h>
 #include <oculus_driver/SonarDriver.h>
+#include <oculus_driver/Recorder.h>
 
 void message_callback_wrapper(py::object callback, 
                               const OculusMessageHeader& header,
@@ -61,11 +62,14 @@ void config_callback_wrapper(py::object callback,
 
 struct OculusPythonHandle
 {
-    oculus::AsyncService    service_;
-    oculus::SonarDriver     sonar_;
+    oculus::AsyncService service_;
+    oculus::SonarDriver  sonar_;
+    oculus::Recorder     recorder_;
+    int recorderCallbackId_;
 
     OculusPythonHandle() :
-        sonar_(service_.io_service())
+        sonar_(service_.io_service()),
+        recorderCallbackId_(-1)
     {}
     ~OculusPythonHandle() { this->stop(); }
 
@@ -102,6 +106,27 @@ struct OculusPythonHandle
         sonar_.add_config_callback(std::bind(config_callback_wrapper, obj,
                                              std::placeholders::_1,
                                              std::placeholders::_2));
+    }
+
+    void recorder_start(const std::string& filename, bool overwrite) {
+        if(recorder_.is_open()) {
+            return;
+        }
+        recorderCallbackId_ = sonar_.add_message_callback(
+            std::bind(&OculusPythonHandle::recorder_callback, this,
+                      std::placeholders::_1, std::placeholders::_2));
+        recorder_.open(filename, overwrite);
+    }
+    void recorder_stop() {
+        recorder_.close();
+        if(recorderCallbackId_ > 0) {
+            sonar_.remove_message_callback(recorderCallbackId_);
+        }
+    }
+    void recorder_callback(const OculusMessageHeader& header,
+                           const std::vector<uint8_t>& data) const
+    {
+        recorder_.write(header, data, sonar_.last_header_stamp());
     }
 };
 
@@ -221,5 +246,8 @@ PYBIND11_MODULE(oculus_python, m_)
         .def("add_message_callback", &OculusPythonHandle::add_message_callback)
         .def("add_ping_callback",    &OculusPythonHandle::add_ping_callback)
         .def("add_status_callback",  &OculusPythonHandle::add_status_callback)
-        .def("add_config_callback",  &OculusPythonHandle::add_config_callback);
+        .def("add_config_callback",  &OculusPythonHandle::add_config_callback)
+
+        .def("recorder_start", &OculusPythonHandle::recorder_start)
+        .def("recorder_stop",  &OculusPythonHandle::recorder_stop);
 }

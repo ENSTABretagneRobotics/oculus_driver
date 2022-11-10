@@ -45,3 +45,5 @@ sonar.start()
 sonar.add_ping_callback(ping_callback);
 # sonar.add_status_callback(status_callback)
 
+sonar.recorder_start("output.oculus", True)
+
