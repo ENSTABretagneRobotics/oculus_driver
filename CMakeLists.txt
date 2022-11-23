@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(oculus_driver VERSION 1.0)
 
 option(BUILD_TESTS "Build unit tests" OFF)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DefaultBuildType.cmake)
 
 find_package(Boost COMPONENTS system thread REQUIRED)
 
