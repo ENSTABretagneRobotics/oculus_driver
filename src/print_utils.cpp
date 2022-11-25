@@ -185,6 +185,53 @@ std::string to_string(const OculusSimplePingResult& msg, const std::string& pref
     return oss.str();
 }
 
+std::string to_string(const OculusSimpleFireMessage2& msg, const std::string& prefix)
+{
+    std::ostringstream oss;
+    oss << prefix << "masterMode      : " << (int)msg.masterMode
+        << prefix << "pingRate        : " << (int)msg.pingRate
+        << prefix << "networkSpeed    : " << (int)msg.networkSpeed
+        << prefix << "gammaCorrection : " << (int)msg.gammaCorrection
+        << prefix << "flags           : " << std::hex <<(int)msg.flags
+        << prefix << "rangePercent    : " << msg.rangePercent
+        << prefix << "gainPercent     : " << msg.gainPercent
+        << prefix << "speedOfSound    : " << msg.speedOfSound
+        << prefix << "salinity        : " << msg.salinity
+        << prefix << "extFlags        : " << std::hex << msg.extFlags
+        << prefix << "reserved        :";
+    for(unsigned int i = 0; i < 8; i++) {
+        oss << " " << msg.reserved[i];
+    }
+    return oss.str();
+}
+
+std::string to_string(const OculusSimplePingResult2& msg, const std::string& prefix)
+{
+    std::ostringstream oss;
+    oss << prefix << "pingId            : " << msg.pingId
+        << prefix << "status            : " << msg.status
+        << prefix << "frequency         : " << msg.frequency
+        << prefix << "temperature       : " << msg.temperature
+        << prefix << "pressure          : " << msg.pressure
+        << prefix << "heading           : " << msg.heading
+        << prefix << "pitch             : " << msg.pitch  
+        << prefix << "roll              : " << msg.roll   
+        << prefix << "speedOfSoundUsed  : " << msg.speeedOfSoundUsed
+        << prefix << "pingStartTime     : " << msg.pingStartTime
+        << prefix << "dataSize          : " << msg.dataSize
+        << prefix << "rangeResolution   : " << msg.rangeResolution
+        << prefix << "nRanges           : " << msg.nRanges
+        << prefix << "nBeams            : " << msg.nBeams
+        << prefix << "spare0            : " << msg.spare0
+        << prefix << "spare1            : " << msg.spare1
+        << prefix << "spare2            : " << msg.spare2
+        << prefix << "spare3            : " << msg.spare3
+        << prefix << "imageOffset       : " << msg.imageOffset
+        << prefix << "imageSize         : " << msg.imageSize
+        << prefix << "messageSize       : " << msg.messageSize;
+    return oss.str();
+}
+
 } //namespace oculus
 
 std::ostream& operator<<(std::ostream& os, DataSizeType dataType)
@@ -237,6 +284,25 @@ std::ostream& operator<<(std::ostream& os, const OculusSimplePingResult& msg)
        << "\n- header :"      << oculus::to_string(msg.fireMessage.head, prefix)
        << "\n- simple fire :" << oculus::to_string(msg.fireMessage, prefix)
        << "\n- simple ping :" << oculus::to_string(msg, prefix);
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const OculusSimpleFireMessage2& msg)
+{
+    const std::string prefix("\n  - ");
+    os << "OculusSimpleFireMessage2 :"
+       << "\n- header :"      << oculus::to_string(msg.head, prefix)
+       << "\n- simple fire (v2) :" << oculus::to_string(msg, prefix);
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const OculusSimplePingResult2& msg)
+{
+    const std::string prefix("\n  - ");
+    os << "OculusSimplePingMessage2 :"
+       << "\n- header :"      << oculus::to_string(msg.fireMessage.head, prefix)
+       << "\n- simple fire (v2) :" << oculus::to_string(msg.fireMessage, prefix)
+       << "\n- simple ping (v2) :" << oculus::to_string(msg, prefix);
     return os;
 }
 

@@ -33,10 +33,12 @@ std::string to_string(DataSizeType dataType);
 std::string to_string(PingRateType pingRate);
 std::string to_string(OculusPartNumberType partNumber);
 
-std::string to_string(const OculusMessageHeader& msg,     const std::string& prefix = "\n- ");
-std::string to_string(const OculusStatusMsg& msg,         const std::string& prefix = "\n- ");
-std::string to_string(const OculusSimpleFireMessage& msg, const std::string& prefix = "\n- ");
-std::string to_string(const OculusSimplePingResult& msg,  const std::string& prefix = "\n- ");
+std::string to_string(const OculusMessageHeader& msg,      const std::string& prefix = "\n- ");
+std::string to_string(const OculusStatusMsg& msg,          const std::string& prefix = "\n- ");
+std::string to_string(const OculusSimpleFireMessage& msg,  const std::string& prefix = "\n- ");
+std::string to_string(const OculusSimplePingResult& msg,   const std::string& prefix = "\n- ");
+std::string to_string(const OculusSimpleFireMessage2& msg, const std::string& prefix = "\n- ");
+std::string to_string(const OculusSimplePingResult2& msg,  const std::string& prefix = "\n- ");
 
 } //namespace oculus
 
@@ -48,5 +50,7 @@ std::ostream& operator<<(std::ostream& os, const OculusMessageHeader& msg);
 std::ostream& operator<<(std::ostream& os, const OculusStatusMsg& msg);
 std::ostream& operator<<(std::ostream& os, const OculusSimpleFireMessage& msg);
 std::ostream& operator<<(std::ostream& os, const OculusSimplePingResult& msg);
+std::ostream& operator<<(std::ostream& os, const OculusSimpleFireMessage2& msg);
+std::ostream& operator<<(std::ostream& os, const OculusSimplePingResult2& msg);
 
 #endif //_DEF_OCULUS_DRIVER_PRINT_UTILS_H_
