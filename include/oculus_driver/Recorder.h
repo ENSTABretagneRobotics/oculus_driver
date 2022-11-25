@@ -130,6 +130,37 @@ class Recorder
                       const SonarDriver::TimePoint& timestamp) const;
 };
 
+class FileReader
+{
+    public:
+
+    static constexpr uint32_t FileMagicNumber = Recorder::FileMagicNumber;
+    static constexpr uint32_t ItemMagicNumber = Recorder::ItemMagicNumber;
+
+    bool check_file_header(const blueprint::LogHeader& header);
+
+    protected:
+
+    std::string                filename_;
+    mutable std::ifstream      file_;
+    mutable blueprint::LogItem nextItem_;
+    mutable std::size_t        itemPosition_;
+
+    public:
+
+    FileReader(const std::string& filename);
+    ~FileReader();
+
+    void open(const std::string& filename);
+    void close()         { file_.close(); }
+    bool is_open() const { return file_.is_open(); }
+
+    std::size_t jump_next() const;
+    std::size_t read_next(blueprint::LogItem& header, std::vector<uint8_t>& data) const;
+    const blueprint::LogItem& next_item_header() const { return nextItem_; }
+    std::size_t current_item_position() const { return itemPosition_; }
+};
+
 } // namespace oculus
 
 #endif //_DEF_OCULUS_DRIVER_RECORDER_H_
