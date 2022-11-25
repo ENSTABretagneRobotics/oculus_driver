@@ -9,6 +9,7 @@ list(APPEND test_files
     src/config_test.cpp
     src/recorder_test.cpp
     src/filereader_test.cpp
+    src/helpers_test.cpp
 )
 
 foreach(filename ${test_files})
