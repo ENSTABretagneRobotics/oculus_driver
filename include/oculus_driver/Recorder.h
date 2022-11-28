@@ -156,6 +156,7 @@ class FileReader
     mutable std::ifstream      file_;
     mutable blueprint::LogItem nextItem_;
     mutable std::size_t        itemPosition_;
+    blueprint::LogHeader       fileHeader_;
 
     public:
 
@@ -165,6 +166,7 @@ class FileReader
     void open(const std::string& filename);
     void close()         { file_.close(); }
     bool is_open() const { return file_.is_open(); }
+    const blueprint::LogHeader& file_header() const { return fileHeader_; }
 
     std::size_t jump_next() const;
     std::size_t read_next(blueprint::LogItem& header, std::vector<uint8_t>& data) const;

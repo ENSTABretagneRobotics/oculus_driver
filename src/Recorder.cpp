@@ -133,16 +133,14 @@ void FileReader::open(const std::string& filename)
         throw std::runtime_error(oss.str());
     }
 
-    // reading and cheacking file header
-    blueprint::LogHeader header;
-    file_.read((char*)&header, sizeof(header));
+    file_.read((char*)&fileHeader_, sizeof(fileHeader_));
     if(!file_) {
         std::ostringstream oss;
         oss << "oculus::FileReader : error reading file header.\n";
         oss << "    file : '" << filename_ << "'";
         throw std::runtime_error(oss.str());
     }
-    FileReader::check_file_header(header);
+    FileReader::check_file_header(fileHeader_);
 
     itemPosition_ = file_.tellg();
     file_.read((char*)&nextItem_, sizeof(nextItem_));
