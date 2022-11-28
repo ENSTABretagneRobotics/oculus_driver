@@ -44,7 +44,7 @@ void Recorder::close()
 }
 
 std::size_t Recorder::write(const OculusMessageHeader& header,
-                            const std::vector<uint8_t>& data,
+                            const uint8_t* data,
                             const SonarDriver::TimePoint& timestamp) const
 {
     if(!this->is_open()) {
@@ -68,7 +68,7 @@ std::size_t Recorder::write(const OculusMessageHeader& header,
     item.payloadSize  = item.originalSize;
 
     file_.write((const char*)&item, sizeof(item));
-    file_.write((const char*)data.data(), item.payloadSize);
+    file_.write((const char*)data, item.payloadSize);
     std::size_t writtenSize = sizeof(item) + item.payloadSize;
 
     // Writing timestamp (not a Blueprint format)
@@ -80,6 +80,13 @@ std::size_t Recorder::write(const OculusMessageHeader& header,
     writtenSize += sizeof(item) + item.payloadSize;
 
     return writtenSize;
+}
+
+std::size_t Recorder::write(const OculusMessageHeader& header,
+                            const std::vector<uint8_t>& data,
+                            const SonarDriver::TimePoint& timestamp) const
+{
+    return this->write(header, data.data(), timestamp);
 }
 
 FileReader::FileReader(const std::string& filename) :

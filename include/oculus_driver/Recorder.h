@@ -21,7 +21,7 @@ namespace blueprint {
 //   qint64         key;          // Possibly saved encryption key (0 otherwise)
 //   double         time;         // Time of file creation
 // };
-// 
+//
 // // ----------------------------------------------------------------------------
 // // The post-ping fire message received back from the sonar ???
 // struct RmLogItem
@@ -103,10 +103,18 @@ class Recorder
         uint64_t seconds;
         uint64_t nanoseconds;
 
-        TimeStamp& operator=(const SonarDriver::TimePoint& other) {
+        static TimeStamp from_sonar_stamp(const SonarDriver::TimePoint& other) {
+            return TimeStamp() = other;
+        }
+
+        TimeStamp& operator=(const SonarDriver::TimePoint& stamp) {
+            this->nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                stamp.time_since_epoch()).count();
+            this->seconds      = this->nanoseconds / 1000000000;
+            this->nanoseconds -= 1000000000*this->seconds;
             return *this;
         }
-        
+
         template <typename T>
         T to_seconds() const { return (T)seconds + 1.0e-9*nanoseconds; }
     };
@@ -125,6 +133,9 @@ class Recorder
     void close();
     bool is_open() const { return file_.is_open(); }
 
+    std::size_t write(const OculusMessageHeader& header,
+                      const uint8_t* data,
+                      const SonarDriver::TimePoint& timestamp) const;
     std::size_t write(const OculusMessageHeader& header,
                       const std::vector<uint8_t>& data,
                       const SonarDriver::TimePoint& timestamp) const;
