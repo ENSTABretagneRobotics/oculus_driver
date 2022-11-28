@@ -6,6 +6,8 @@ namespace py = pybind11;
 #include <oculus_driver/SonarDriver.h>
 #include <oculus_driver/Recorder.h>
 
+#include "oculus_files.h"
+
 void message_callback_wrapper(py::object callback, 
                               const OculusMessageHeader& header,
                               const std::vector<uint8_t>& data)
@@ -254,4 +256,6 @@ PYBIND11_MODULE(oculus_python, m_)
         .def("recorder_start", &OculusPythonHandle::recorder_start)
         .def("recorder_stop",  &OculusPythonHandle::recorder_stop)
         .def("is_recording",   &OculusPythonHandle::is_recording);
+
+    init_oculus_python_files(m_);
 }

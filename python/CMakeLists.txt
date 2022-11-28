@@ -16,7 +16,10 @@ if(NOT TARGET oculus_driver)
 endif()
 
 
-pybind11_add_module(oculus_python src/oculus_python.cpp)
+pybind11_add_module(oculus_python
+    src/oculus_files.cpp
+    src/oculus_python.cpp
+)
 target_link_libraries(oculus_python PUBLIC
     oculus_driver
 )
