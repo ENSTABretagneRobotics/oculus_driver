@@ -14,6 +14,13 @@ struct OculusFileReader
     OculusFileReader(const std::string& path) : file_(path) {}
 
     const oculus::blueprint::LogHeader file_header() const { return file_.file_header(); }
+    py::object read_next_message() const {
+        auto msg = file_.read_next_message();
+        if(msg)
+            return py::cast(msg.get());
+        else
+            return py::none();
+    }
 };
 
 void init_oculus_python_files(py::module& parentModule)
@@ -66,7 +73,8 @@ void init_oculus_python_files(py::module& parentModule)
 
     py::class_<OculusFileReader>(m_, "OculusFileReader")
         .def(py::init<const std::string&>())
-        .def("file_header", &OculusFileReader::file_header);
+        .def("file_header",       &OculusFileReader::file_header)
+        .def("read_next_message", &OculusFileReader::read_next_message);
 }
 
 

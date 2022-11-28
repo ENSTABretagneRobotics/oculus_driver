@@ -3,11 +3,11 @@
 import oculus_python
 
 
-def message_callback(header, data):
-    print("Got message :", header)
-    print(type(data))
-    print(data.shape)
-    print(data[0])
+def message_callback(msg):
+    print("Got message :", msg.header())
+    print(type(msg.data()))
+    # print(data.shape)
+    # print(data[0])
 
 c = None
 def ping_callback(metadata, data):
@@ -41,8 +41,8 @@ def print_config(sonar):
 sonar = oculus_python.OculusSonar()
 sonar.start()
 
-# sonar.add_message_callback(message_callback)
-sonar.add_ping_callback(ping_callback);
+sonar.add_message_callback(message_callback)
+# sonar.add_ping_callback(ping_callback);
 # sonar.add_status_callback(status_callback)
 
 sonar.recorder_start("output.oculus", True)

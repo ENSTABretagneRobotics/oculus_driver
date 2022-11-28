@@ -2,30 +2,39 @@
 namespace py = pybind11;
 
 #include <oculus_driver/Oculus.h>
+#include <oculus_driver/OculusMessage.h>
 #include <oculus_driver/AsyncService.h>
 #include <oculus_driver/SonarDriver.h>
 #include <oculus_driver/Recorder.h>
 
 #include "oculus_files.h"
 
-void message_callback_wrapper(py::object callback, 
-                              const OculusMessageHeader& header,
-                              const std::vector<uint8_t>& data)
+inline py::memoryview make_memory_view(const std::vector<uint8_t>& data)
+{
+    return py::memoryview(py::buffer_info(const_cast<uint8_t*>(data.data()),
+                          sizeof(uint8_t),
+                          py::format_descriptor<uint8_t>::format(),
+                          1, {data.size()}, {1}));
+}
+
+inline py::memoryview make_memory_view(const oculus::Message& msg)
+{
+    return make_memory_view(msg.data());
+}
+
+inline void message_callback_wrapper(py::object callback, const oculus::Message& msg)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     
-    callback(py::cast(&header),
-             py::memoryview(py::buffer_info(const_cast<uint8_t*>(data.data()),
-                                             sizeof(uint8_t),
-                                             py::format_descriptor<uint8_t>::format(),
-                                             1, {data.size()}, {1})));
+    callback(py::cast(msg));
+
     PyGILState_Release(gstate);
 }
 
-void ping_callback_wrapper(py::object callback, 
-                           const OculusSimplePingResult& metadata,
-                           const std::vector<uint8_t>& data)
+inline void ping_callback_wrapper(py::object callback, 
+                                  const OculusSimplePingResult& metadata,
+                                  const std::vector<uint8_t>& data)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -39,8 +48,8 @@ void ping_callback_wrapper(py::object callback,
     PyGILState_Release(gstate);
 }
 
-void status_callback_wrapper(py::object callback, 
-                             const OculusStatusMsg& status)
+inline void status_callback_wrapper(py::object callback, 
+                                    const OculusStatusMsg& status)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -50,9 +59,9 @@ void status_callback_wrapper(py::object callback,
     PyGILState_Release(gstate);
 }
 
-void config_callback_wrapper(py::object callback, 
-                             const OculusSimpleFireMessage& lastConfig,
-                             const OculusSimpleFireMessage& newConfig)
+inline void config_callback_wrapper(py::object callback, 
+                                    const OculusSimpleFireMessage& lastConfig,
+                                    const OculusSimpleFireMessage& newConfig)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -92,8 +101,7 @@ struct OculusPythonHandle
 
     void add_message_callback(py::object obj) {
         sonar_.add_message_callback(std::bind(message_callback_wrapper, obj,
-                                              std::placeholders::_1, 
-                                              std::placeholders::_2));
+                                              std::placeholders::_1));
     }
     void add_ping_callback(py::object obj) {
         sonar_.add_ping_callback(std::bind(ping_callback_wrapper, obj,
@@ -114,10 +122,10 @@ struct OculusPythonHandle
         if(recorder_.is_open()) {
             return;
         }
+        recorder_.open(filename, overwrite);
         recorderCallbackId_ = sonar_.add_message_callback(
             std::bind(&OculusPythonHandle::recorder_callback, this,
-                      std::placeholders::_1, std::placeholders::_2));
-        recorder_.open(filename, overwrite);
+                      std::placeholders::_1));
     }
     void recorder_stop() {
         recorder_.close();
@@ -125,10 +133,8 @@ struct OculusPythonHandle
             sonar_.remove_message_callback(recorderCallbackId_);
         }
     }
-    void recorder_callback(const OculusMessageHeader& header,
-                           const std::vector<uint8_t>& data) const
-    {
-        recorder_.write(header, data, sonar_.last_header_stamp());
+    void recorder_callback(const oculus::Message& msg) const {
+        recorder_.write(msg);
     }
     bool is_recording() const {
         return recorder_.is_open();
@@ -239,6 +245,16 @@ PYBIND11_MODULE(oculus_python, m_)
             return oss.str();
         });
 
+    py::class_<oculus::Message>(m_, "OculusMessage")
+        .def(py::init<>())
+        .def("header", &oculus::Message::header)
+        .def("data", [](const oculus::Message& msg) { return make_memory_view(msg.data()); })
+        .def("__str__", [](const oculus::Message& msg) {
+            std::ostringstream oss;
+            oss << "OculusMessage :\n" << msg.header();
+            return oss.str();
+        });
+
     py::class_<OculusPythonHandle>(m_, "OculusSonar")
         .def(py::init<>())
         .def("start",       &OculusPythonHandle::start)
@@ -259,3 +275,7 @@ PYBIND11_MODULE(oculus_python, m_)
 
     init_oculus_python_files(m_);
 }
+
+
+
+
