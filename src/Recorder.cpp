@@ -1,6 +1,7 @@
 #include <oculus_driver/Recorder.h>
+#include <oculus_driver/print_utils.h>
 
-#include <chrono>
+#include <iostream>
 
 namespace oculus {
 
@@ -43,54 +44,51 @@ void Recorder::close()
     file_.close();
 }
 
-std::size_t Recorder::write(const OculusMessageHeader& header,
-                            const uint8_t* data,
-                            const SonarDriver::TimePoint& timestamp) const
+std::size_t Recorder::write(const blueprint::LogItem& header,
+                            const uint8_t* data) const
 {
     if(!this->is_open()) {
         return 0;
     }
 
-    TimeStamp stamp;
-    stamp = timestamp;
-    
-    // Writing oculus data
+    file_.write((const char*)&header, sizeof(header));
+    file_.write((const char*)data, header.payloadSize);
+    return sizeof(header) + header.payloadSize;
+}
+
+std::size_t Recorder::write(const Message& message) const
+{
+    if(!this->is_open()) {
+        return 0;
+    }
+    std::size_t writtenSize = 0;
+
+    TimeStamp stamp = TimeStamp::from_sonar_stamp(message.timestamp());
+
     blueprint::LogItem item;
     std::memset(&item, 0, sizeof(item));
-
+    
     item.itemHeader   = ItemMagicNumber;
     item.sizeHeader   = sizeof(item);
     item.type         = blueprint::rt_oculusSonar;
     item.version      = 0;
     item.time         = stamp.to_seconds<double>();
     item.compression  = 0;
-    item.originalSize = sizeof(header) + header.payloadSize;
+    item.originalSize = message.data().size();
     item.payloadSize  = item.originalSize;
+    writtenSize += this->write(item, message.data().data());
 
-    file_.write((const char*)&item, sizeof(item));
-    file_.write((const char*)data, item.payloadSize);
-    std::size_t writtenSize = sizeof(item) + item.payloadSize;
-
-    // Writing timestamp (not a Blueprint format)
     item.type         = blueprint::rt_oculusSonarStamp;
-    item.originalSize = sizeof(TimeStamp);
+    item.originalSize = sizeof(stamp);
     item.payloadSize  = item.originalSize;
-    file_.write((const char*)&item,  sizeof(item));
-    file_.write((const char*)&stamp, sizeof(stamp));
-    writtenSize += sizeof(item) + item.payloadSize;
+    writtenSize += this->write(item, (const uint8_t*)&stamp);
 
     return writtenSize;
 }
 
-std::size_t Recorder::write(const OculusMessageHeader& header,
-                            const std::vector<uint8_t>& data,
-                            const SonarDriver::TimePoint& timestamp) const
-{
-    return this->write(header, data.data(), timestamp);
-}
-
 FileReader::FileReader(const std::string& filename) :
-    itemPosition_(0)
+    itemPosition_(0),
+    message_(new Message())
 {
     std::memset(&nextItem_, 0, sizeof(nextItem_));
     this->open(filename);
@@ -141,20 +139,27 @@ void FileReader::open(const std::string& filename)
         throw std::runtime_error(oss.str());
     }
     FileReader::check_file_header(fileHeader_);
+    this->read_next_header();
+}
 
+void FileReader::read_next_header() const
+{
     itemPosition_ = file_.tellg();
     file_.read((char*)&nextItem_, sizeof(nextItem_));
     if(!file_) {
         std::memset(&nextItem_, 0, sizeof(nextItem_));
         itemPosition_ = 0;
-        std::ostringstream oss;
-        oss << "oculus::FileReader : error reading first item. The file may be empty.\n";
-        oss << "    file : '" << filename_ << "'";
-        throw std::runtime_error(oss.str());
+        if(!file_.eof()) {
+            std::ostringstream oss;
+            oss << "oculus::FileReader : error reading next item header. ";
+            oss << "The file may be corrupted.\n";
+            oss << "    file : '" << filename_ << "'";
+            throw std::runtime_error(oss.str());
+        }
     }
 }
 
-std::size_t FileReader::jump_next() const
+std::size_t FileReader::jump_item() const
 {
     if(nextItem_.type == 0) {
         return 0;
@@ -167,56 +172,67 @@ std::size_t FileReader::jump_next() const
         oss << "    file : '" << filename_ << "'";
         throw std::runtime_error(oss.str());
     }
-    std::size_t currentItemPosition = itemPosition_;
 
-    itemPosition_ = file_.tellg();
-    file_.read((char*)&nextItem_, sizeof(nextItem_));
-    if(!file_) {
-        std::memset(&nextItem_, 0, sizeof(nextItem_));
-        itemPosition_ = 0;
-        if(!file_.eof()) {
-            std::ostringstream oss;
-            oss << "oculus::FileReader : error reading next item header. ";
-            oss << "The file may be corrupted.\n";
-            oss << "    file : '" << filename_ << "'";
-            throw std::runtime_error(oss.str());
-        }
-    }
+    std::size_t currentItemPosition = itemPosition_;
+    this->read_next_header();
     return currentItemPosition;
 }
 
-std::size_t FileReader::read_next(blueprint::LogItem& header, std::vector<uint8_t>& data) const
+std::size_t FileReader::read_next_item(uint8_t* dst) const
 {
     if(nextItem_.type == 0) {
         return 0;
     }
 
-    // reading data chunk
-    header = nextItem_;
-    data.resize(header.payloadSize);
-    if(!file_.read((char*)data.data(), header.payloadSize)) {
+    if(!file_.read((char*)dst, nextItem_.payloadSize)) {
         std::memset(&nextItem_, 0, sizeof(nextItem_));
         std::ostringstream oss;
         oss << "oculus::FileReader : error reading item data. File might be corrupted.\n";
         oss << "    file : '" << filename_ << "'";
         throw std::runtime_error(oss.str());
     }
-    std::size_t currentItemPosition = itemPosition_;
 
-    itemPosition_ = file_.tellg();
-    file_.read((char*)&nextItem_, sizeof(nextItem_));
-    if(!file_) {
-        std::memset(&nextItem_, 0, sizeof(nextItem_));
-        itemPosition_ = 0;
-        if(!file_.eof()) {
-            std::ostringstream oss;
-            oss << "oculus::FileReader : error reading next item header. ";
-            oss << "The file may be corrupted.\n";
-            oss << "    file : '" << filename_ << "'";
-            throw std::runtime_error(oss.str());
-        }
-    }
+    std::size_t currentItemPosition = itemPosition_;
+    this->read_next_header();
     return currentItemPosition;
+}
+
+
+std::size_t FileReader::read_next_item(std::vector<uint8_t>& dst) const
+{
+    if(nextItem_.type == 0) {
+        return 0;
+    }
+    dst.resize(nextItem_.payloadSize);
+    return this->read_next_item(dst.data());
+}
+
+std::shared_ptr<const Message> FileReader::read_next_message() const
+{
+    // Reading file until we find a rt_oculusSonar message or enf of file
+    while(nextItem_.type != blueprint::rt_oculusSonar && this->jump_item());
+    if(nextItem_.type == 0) {
+        return nullptr;
+    }
+
+    double nextItemDate = nextItem_.time;
+    this->read_next_item(message_->data_);
+    (*message_).update_from_data();
+
+    // Reading TimeStamp from next message if it is there. Falling back to the
+    // LogItem date if it is not there.
+    if(nextItem_.type == blueprint::rt_oculusSonarStamp) {
+        // next message is timestamp associated with the message we just read.
+        TimeStamp stamp;
+        this->read_next_item((uint8_t*)&stamp);
+        message_->timestamp_ = stamp.to_sonar_stamp();
+    }
+    else {
+        uint64_t nanos = 1000000000*nextItemDate;
+        message_->timestamp_ = Message::TimePoint(std::chrono::nanoseconds(nanos));
+    }
+
+    return message_;
 }
 
 } //namespace oculus

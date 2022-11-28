@@ -30,11 +30,10 @@ SonarClient::SonarClient(const IoServicePtr& service,
     checkerPeriod_(checkerPeriod),
     checkerTimer_(*service, checkerPeriod_),
     statusListener_(service),
-    statusCallbackId_(0),
-    data_(0)
+    //statusCallbackId_(0),
+    //data_(0)
+    statusCallbackId_(0)
 {
-    std::memset(&initialHeader_, 0, sizeof(initialHeader_));
-
     this->checkerTimer_.async_wait(
         std::bind(&SonarClient::checker_callback, this, std::placeholders::_1));
     this->reset_connection();
@@ -193,8 +192,8 @@ void SonarClient::initiate_receive()
     //std::cout << "Initiate receive : " << count << std::endl << std::flush;
     count++;
     boost::asio::async_read(*socket_,
-        boost::asio::buffer(reinterpret_cast<uint8_t*>(&initialHeader_), 
-                            sizeof(initialHeader_)),
+        boost::asio::buffer(reinterpret_cast<uint8_t*>(&message_.header_), 
+                            sizeof(message_.header_)),
         boost::bind(&SonarClient::header_received_callback, this, _1, _2));
 }
 
@@ -211,7 +210,7 @@ void SonarClient::header_received_callback(const boost::system::error_code err,
     // (TODO : check this last statement. Checked : wrong. Other message types
     // seem to be sent but are not documented by Oculus).
     this->check_reception(err);
-    if(receivedByteCount != sizeof(initialHeader_) || !this->is_valid(initialHeader_)) {
+    if(receivedByteCount != sizeof(message_.header_) || !this->is_valid(message_.header_)) {
         // Either we got data in the middle of a ping or did not get enougth
         // bytes (end of message). Continue listening to get a valid header.
         std::cout << "Header reception error" << std::endl << std::flush;
@@ -222,37 +221,31 @@ void SonarClient::header_received_callback(const boost::system::error_code err,
     // Messsage header is valid. Now getting the remaining part of the message.
     // (The header contains the payload size, we can receive everything and
     // parse afterwards).
-    data_.resize(sizeof(initialHeader_) + initialHeader_.payloadSize);
+    message_.update_from_header();
     boost::asio::async_read(*socket_,
-        boost::asio::buffer(data_.data() + sizeof(initialHeader_), initialHeader_.payloadSize),
+        boost::asio::buffer(message_.payload_handle(), message_.payload_size()),
         boost::bind(&SonarClient::data_received_callback, this, _1, _2));
 }
 
 void SonarClient::data_received_callback(const boost::system::error_code err,
                                          std::size_t receivedByteCount)
 {
-    if(receivedByteCount != initialHeader_.payloadSize) {
+    if(receivedByteCount != message_.header_.payloadSize) {
         // We did not get enough bytes. Reinitiating reception.
         std::cout << "Data reception error" << std::endl << std::flush;
         this->initiate_receive();
         return;
     }
-
-    // We did received everything. copying initial header in data_ to have a
-    // full message, then dispatching.
-    *(reinterpret_cast<OculusMessageHeader*>(data_.data())) = initialHeader_;
     
     clock_.reset();
     // handle message is to be reimplemented in a subclass
-    this->handle_message(initialHeader_, data_);
+    this->handle_message(message_);
 
     // Continuing the reception loop.
-    //std::cout << "Looping" << std::endl << std::flush;
     this->initiate_receive();
 }
 
-void SonarClient::handle_message(const OculusMessageHeader& header,
-                                 const std::vector<uint8_t>& data)
+void SonarClient::handle_message(const Message& msg)
 {
     // To be reimplemented in a subclass
 }

@@ -2,6 +2,7 @@
 using namespace std;
 
 #include <oculus_driver/Recorder.h>
+#include <oculus_driver/print_utils.h>
 using namespace oculus;
 
 int main(int argc, char** argv)
@@ -12,10 +13,8 @@ int main(int argc, char** argv)
     cout << "Opening file : " << argv[1] << endl;
 
     FileReader file(argv[1]);
-    blueprint::LogItem header;
-    std::vector<uint8_t> data;
-    while(file.read_next(header, data)) {
-        cout << "Got item : " << header.type << endl;
+    while(auto msg = file.read_next_message()) {
+        cout << "Got item : " << msg->header() << endl;
     }
 
     return 0;

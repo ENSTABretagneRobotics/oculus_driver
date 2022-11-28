@@ -41,9 +41,8 @@ class SonarDriver : public SonarClient
     using PingCallbacks = CallbackQueue<const PingResult&,
                                         const std::vector<uint8_t>&>; 
     using DummyCallbacks   = CallbackQueue<const OculusMessageHeader&>;
-    using MessageCallbacks = CallbackQueue<const OculusMessageHeader&,
-                                           const std::vector<uint8_t>&>;
-    using ConfigCallback = CallbackQueue<const PingConfig&, const PingConfig&>;
+    using MessageCallbacks = CallbackQueue<const Message&>;
+    using ConfigCallback   = CallbackQueue<const PingConfig&, const PingConfig&>;
 
     using TimeSource = SonarClient::TimeSource;
     using TimePoint  = typename std::invoke_result<decltype(&TimeSource::now)>::type;
@@ -74,8 +73,7 @@ class SonarDriver : public SonarClient
     void resume();
     
     virtual void on_connect();
-    virtual void handle_message(const OculusMessageHeader& header,
-                                const std::vector<uint8_t>& data);
+    virtual void handle_message(const Message& message);
 
     /////////////////////////////////////////////
     // All remaining member function are related to callbacks and are merely
@@ -177,14 +175,14 @@ unsigned int SonarDriver::add_message_callback(F&& func, Args&&... args)
 {
     // static_cast is to avoid infinite loop at type resolution at compile time
     return this->add_message_callback(static_cast<const MessageCallbacks::CallbackT&>(
-        std::bind(func, args..., std::placeholders::_1, std::placeholders::_2)));
+        std::bind(func, args..., std::placeholders::_1)));
 }
 
 template <typename F, class... Args>
 bool SonarDriver::on_next_message(F&& func, Args&&... args)
 {
     return this->on_next_message(static_cast<const MessageCallbacks::CallbackT&>(
-        std::bind(func, args..., std::placeholders::_1, std::placeholders::_2)));
+        std::bind(func, args..., std::placeholders::_1)));
 }
 
 

@@ -71,13 +71,12 @@ SonarDriver::PingConfig SonarDriver::last_ping_config() const
 SonarDriver::PingConfig SonarDriver::current_ping_config()
 {
     PingConfig config;
-    if(!this->on_next_message([&](const OculusMessageHeader& header,
-                                  const std::vector<uint8_t>& data) {
+    if(!this->on_next_message([&](const Message& message) {
         // lastConfig_ is ALWAYS updated before the callbacks are called.
         // We only need to wait for the next message to get the current ping
         // configuration.
         config = lastConfig_;
-        config.head = header;
+        config.head = message.header();
     }))
     {
         throw MessageCallbacks::TimeoutReached();
@@ -150,9 +149,10 @@ void SonarDriver::on_connect()
 /**
  * Called when a new complete message is received (any type).
  */
-void SonarDriver::handle_message(const OculusMessageHeader& header,
-                                 const std::vector<uint8_t>& data)
+void SonarDriver::handle_message(const Message& message)
 {
+    const auto& header = message.header();
+    const auto& data   = message.data();
     OculusSimpleFireMessage newConfig = lastConfig_;
     switch(header.msgId) {
         case messageSimplePingResult:
@@ -182,7 +182,7 @@ void SonarDriver::handle_message(const OculusMessageHeader& header,
 
     // Calling generic message callbacks first (in case we want to do something
     // before calling the specialized callbacks).
-    messageCallbacks_.call(header, data);
+    messageCallbacks_.call(message);
     switch(header.msgId) {
         case messageSimplePingResult:
             pingCallbacks_.call(*(reinterpret_cast<const PingResult*>(data.data())), data);
@@ -274,7 +274,7 @@ bool SonarDriver::on_next_message(const MessageCallbacks::CallbackT& callback)
  */
 bool SonarDriver::wait_next_message()
 {
-    auto dummy = [](const OculusMessageHeader&, const std::vector<uint8_t>&) {};
+    auto dummy = [](const Message&) {};
     return this->on_next_message(dummy);
 }
 

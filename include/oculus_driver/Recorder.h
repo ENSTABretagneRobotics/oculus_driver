@@ -2,8 +2,11 @@
 #define _DEF_OCULUS_DRIVER_RECORDER_H_
 
 #include <fstream>
+#include <memory>
+#include <chrono>
+#include <sstream>
 
-#include <oculus_driver/SonarDriver.h>
+#include <oculus_driver/OculusMessage.h>
 
 namespace oculus {
 
@@ -103,11 +106,16 @@ class Recorder
         uint64_t seconds;
         uint64_t nanoseconds;
 
-        static TimeStamp from_sonar_stamp(const SonarDriver::TimePoint& other) {
+        static TimeStamp from_sonar_stamp(const Message::TimePoint& other) {
             return TimeStamp() = other;
         }
 
-        TimeStamp& operator=(const SonarDriver::TimePoint& stamp) {
+        Message::TimePoint to_sonar_stamp() const {
+            uint64_t nanos = 1000000000*this->seconds + this->nanoseconds;
+            return Message::TimePoint(std::chrono::nanoseconds(nanos));
+        }
+
+        TimeStamp& operator=(const Message::TimePoint& stamp) {
             this->nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 stamp.time_since_epoch()).count();
             this->seconds      = this->nanoseconds / 1000000000;
@@ -133,12 +141,9 @@ class Recorder
     void close();
     bool is_open() const { return file_.is_open(); }
 
-    std::size_t write(const OculusMessageHeader& header,
-                      const uint8_t* data,
-                      const SonarDriver::TimePoint& timestamp) const;
-    std::size_t write(const OculusMessageHeader& header,
-                      const std::vector<uint8_t>& data,
-                      const SonarDriver::TimePoint& timestamp) const;
+    std::size_t write(const blueprint::LogItem& header,
+                      const uint8_t* data) const;
+    std::size_t write(const Message& message) const;
 };
 
 class FileReader
@@ -147,6 +152,8 @@ class FileReader
 
     static constexpr uint32_t FileMagicNumber = Recorder::FileMagicNumber;
     static constexpr uint32_t ItemMagicNumber = Recorder::ItemMagicNumber;
+
+    using TimeStamp = Recorder::TimeStamp;
 
     bool check_file_header(const blueprint::LogHeader& header);
 
@@ -158,6 +165,10 @@ class FileReader
     mutable std::size_t        itemPosition_;
     blueprint::LogHeader       fileHeader_;
 
+    std::shared_ptr<Message> message_;
+
+    void read_next_header() const;
+
     public:
 
     FileReader(const std::string& filename);
@@ -168,10 +179,16 @@ class FileReader
     bool is_open() const { return file_.is_open(); }
     const blueprint::LogHeader& file_header() const { return fileHeader_; }
 
-    std::size_t jump_next() const;
-    std::size_t read_next(blueprint::LogItem& header, std::vector<uint8_t>& data) const;
-    const blueprint::LogItem& next_item_header() const { return nextItem_; }
     std::size_t current_item_position() const { return itemPosition_; }
+    
+    const blueprint::LogItem& next_item_header() const { return nextItem_; }
+    std::size_t read_next_item(uint8_t* dst) const; // data is assumed to have been reserved
+                                                    // using size given in next_item_header
+    std::size_t jump_item() const;
+
+    // These are for convenience
+    std::size_t read_next_item(std::vector<uint8_t>& dst) const;
+    std::shared_ptr<const Message> read_next_message() const;
 };
 
 } // namespace oculus

@@ -38,10 +38,9 @@ void print_dummy(const OculusMessageHeader& msg)
     //cout << msg << endl;
 }
 
-void print_all(const OculusMessageHeader& header,
-               const std::vector<uint8_t>& data)
+void print_all(const Message& msg)
 {
-    switch(header.msgId) {
+    switch(msg.header().msgId) {
         case messageSimplePingResult:
             std::cout << "Got messageSimplePingResult" << endl;
             break;
@@ -64,11 +63,9 @@ void print_all(const OculusMessageHeader& header,
 }
 
 void recorder_callback(const Recorder* recorder,
-                       const SonarDriver* sonar,
-                       const OculusSimplePingResult& metadata,
-                       const std::vector<uint8_t>& data)
+                       const Message& msg)
 {
-    recorder->write(metadata.fireMessage.head, data, sonar->last_header_stamp());
+    recorder->write(msg);
 }
 
 int main()
@@ -86,9 +83,7 @@ int main()
     Recorder recorder;
     recorder.open("output.oculus", true);
 
-    sonar.add_ping_callback(std::bind(recorder_callback, &recorder, &sonar,
-                                      std::placeholders::_1,
-                                      std::placeholders::_2));
+    sonar.add_message_callback(std::bind(recorder_callback, &recorder, std::placeholders::_1));
 
     getchar();
 

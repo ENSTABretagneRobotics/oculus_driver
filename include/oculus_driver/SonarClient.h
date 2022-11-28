@@ -38,6 +38,8 @@
 #include <oculus_driver/print_utils.h>
 #include <oculus_driver/StatusListener.h>
 
+#include <oculus_driver/OculusMessage.h>
+
 namespace oculus {
 
 /**
@@ -67,8 +69,8 @@ class SonarClient
 
     enum ConnectionState { Initializing, Attempt, Connected, Lost };
 
-    using TimeSource = std::chrono::system_clock;
-    using TimePoint  = typename std::invoke_result<decltype(&TimeSource::now)>::type;
+    using TimeSource = Message::TimeSource;
+    using TimePoint  = Message::TimePoint;
 
     protected:
     
@@ -86,10 +88,7 @@ class SonarClient
     StatusListener             statusListener_;
     StatusListener::CallbackId statusCallbackId_;
 
-    OculusMessageHeader    initialHeader_;
-    std::vector<uint8_t>   data_;
-
-    TimePoint recvTime_;
+    Message message_;
 
     // helper stubs
     void checker_callback(const boost::system::error_code& err);
@@ -121,13 +120,12 @@ class SonarClient
     
     // This is called regardless of the content of the message.
     // To be reimplemented in a subclass (does nothing by default).
-    virtual void handle_message(const OculusMessageHeader& header,
-                                const std::vector<uint8_t>& data);
+    virtual void handle_message(const Message& msg);
 
     template <typename TimeT = float>
     TimeT time_since_last_message() const { return clock_.now<TimeT>(); }
 
-    TimePoint last_header_stamp() const { return recvTime_; }
+    TimePoint last_header_stamp() const { return message_.timestamp(); }
 };
 
 } //namespace oculus
