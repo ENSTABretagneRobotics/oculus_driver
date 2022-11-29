@@ -199,6 +199,74 @@ class PingWrapper1 : public PingWrapper
     }
 };
 
+class PingWrapper2 : public PingWrapper
+{
+    public:
+
+    using Ptr      = std::shared_ptr<PingWrapper2>;
+    using ConstPtr = std::shared_ptr<const PingWrapper2>;
+
+    protected:
+
+    PingWrapper2(const Message::ConstPtr& msg) :
+        PingWrapper(msg)
+    {
+        if(msg->message_version() != 2) {
+            throw std::runtime_error(
+                "Tried to instanciate a PingWrapper2 with data from a PingWrapper1");
+        }
+    }
+
+    public:
+
+    static Ptr Create(const Message::ConstPtr& msg) { return Ptr(new PingWrapper2(msg)); }
+
+    //virtual Ptr copy() const { return Create(this->msg_->copy()); } // not compiling
+    virtual PingWrapper::Ptr copy() const { return Create(this->msg_->copy()); }
+
+    const OculusSimplePingResult2& metadata() const {
+        return *reinterpret_cast<const OculusSimplePingResult2*>(this->msg_->data().data());
+    }
+
+    virtual uint16_t       range_count()   const { return this->metadata().nRanges; }
+    virtual uint16_t       bearing_count() const { return this->metadata().nBeams;  }
+    virtual const int16_t* bearing_data()  const {
+        return (const int16_t*)(this->data().data() + sizeof(this->metadata()));
+    }
+    virtual const uint8_t* ping_data() const {
+        return this->data().data() + this->metadata().imageOffset;
+    }
+
+    //virtual bool    has_gains()   const { return this->metadata().fireMessage.flags | 0x4; } // is broken
+    virtual bool has_gains() const {
+        return this->metadata().imageSize > this->sample_size()*this->bearing_count()*this->range_count();
+    }
+    virtual uint8_t master_mode() const { return this->metadata().fireMessage.masterMode;  }
+    virtual uint8_t sample_size() const {
+        switch(this->metadata().dataSize) {
+            case dataSize8Bit:  return 1; break;
+            case dataSize16Bit: return 2; break;
+            case dataSize24Bit: return 3; break;
+            case dataSize32Bit: return 4; break;
+            default:
+                //invalid value in metadata.dataSize. Deducing from message size.
+                auto lineStep = this->metadata().imageSize / this->metadata().nRanges;
+                if(lineStep*this->metadata().nRanges != this->metadata().imageSize) {
+                    return 0;
+                }
+                if(this->has_gains())
+                    lineStep -= 4;
+                auto sampleSize = lineStep / this->metadata().nBeams;
+                // Checking integrity
+                if(sampleSize*this->metadata().nBeams != lineStep) {
+                    return 0;
+                }
+                return sampleSize;
+                break;
+        }
+    }
+};
+
 class PingMessage
 {
     public:
@@ -214,7 +282,7 @@ class PingMessage
             return nullptr;
         }
         if(msg->message_version() == 2) {
-            throw std::runtime_error("Not implemented");
+            return PingWrapper2::Create(msg);
         }
         else {
             return PingWrapper1::Create(msg);

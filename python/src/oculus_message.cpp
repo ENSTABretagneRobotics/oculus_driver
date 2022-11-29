@@ -32,6 +32,10 @@ void init_oculus_message(py::module& m_)
         })
         .def("range_count",   &oculus::PingMessage::range_count)
         .def("bearing_count", &oculus::PingMessage::bearing_count)
+        .def("has_gains",     &oculus::PingMessage::has_gains)
+        .def("master_mode",   &oculus::PingMessage::master_mode)
+        .def("sample_size",   &oculus::PingMessage::sample_size)
+
         .def("bearing_data",  [](const oculus::PingMessage::ConstPtr& msg) {
             return make_memory_view(msg->bearing_count(), msg->bearing_data());
         })
