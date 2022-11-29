@@ -38,9 +38,9 @@ void print_dummy(const OculusMessageHeader& msg)
     //cout << msg << endl;
 }
 
-void print_all(const Message& msg)
+void print_all(const Message::ConstPtr& msg)
 {
-    switch(msg.header().msgId) {
+    switch(msg->header().msgId) {
         case messageSimplePingResult:
             std::cout << "Got messageSimplePingResult" << endl;
             break;
@@ -63,7 +63,7 @@ void print_all(const Message& msg)
 }
 
 void recorder_callback(const Recorder* recorder,
-                       const Message& msg)
+                       const Message::ConstPtr& msg)
 {
     recorder->write(msg);
 }

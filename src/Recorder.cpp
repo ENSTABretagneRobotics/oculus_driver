@@ -207,7 +207,7 @@ std::size_t FileReader::read_next_item(std::vector<uint8_t>& dst) const
     return this->read_next_item(dst.data());
 }
 
-std::shared_ptr<const Message> FileReader::read_next_message() const
+Message::ConstPtr FileReader::read_next_message() const
 {
     // Reading file until we find a rt_oculusSonar message or enf of file
     while(nextItem_.type != blueprint::rt_oculusSonar && this->jump_item());
@@ -235,9 +235,9 @@ std::shared_ptr<const Message> FileReader::read_next_message() const
     return message_;
 }
 
-std::shared_ptr<const PingMessage> FileReader::read_next_ping() const
+PingMessage::ConstPtr FileReader::read_next_ping() const
 {
-    std::shared_ptr<const Message> msg = this->read_next_message();
+    Message::ConstPtr msg = this->read_next_message();
     while(msg && !msg->is_ping_message()) {
         msg = this->read_next_message();
     }
@@ -248,7 +248,7 @@ std::shared_ptr<const PingMessage> FileReader::read_next_ping() const
         throw std::runtime_error("PingMessage2 not implemented");
     }
     else {
-        return std::make_shared<PingMessage1>(*msg);
+        return PingMessage1::Create(msg);
     }
 }
 

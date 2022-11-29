@@ -41,6 +41,9 @@ class Message
     friend class SonarClient;
     friend class FileReader;
 
+    using Ptr        = std::shared_ptr<Message>;
+    using ConstPtr   = std::shared_ptr<const Message>;
+
     using TimeSource = std::chrono::system_clock;
     using TimePoint  = typename std::invoke_result<decltype(&TimeSource::now)>::type;
 
@@ -60,11 +63,22 @@ class Message
     }
     uint8_t* payload_handle() { return data_.data() + sizeof(header_); }
 
+    public:// have to leave constructors public for pybind11
+
+    Message() { std::memset(&header_, 0, sizeof(header_)); }
+    Message(const Message& other) :
+        timestamp_(other.timestamp_),
+        header_(other.header_),
+        data_(other.data_)
+    {}
+
     public:
 
-    Message() {
-        std::memset(&header_, 0, sizeof(header_));
-    }
+    static Ptr Create()                      { return Ptr(new Message());       }
+    static Ptr Create(const Message&  other) { return Ptr(new Message(other));  }
+    static Ptr Create(const ConstPtr& other) { return Ptr(new Message(*other)); }
+
+    Ptr copy() const { return Create(*this); }
     
     const OculusMessageHeader&  header()    const { return header_;    }
     const std::vector<uint8_t>& data()      const { return data_;      }
@@ -82,36 +96,56 @@ class PingMessage
 {
     public:
 
+    using Ptr      = std::shared_ptr<PingMessage>;
+    using ConstPtr = std::shared_ptr<const PingMessage>;
+
     using TimeSource = Message::TimeSource;
     using TimePoint  = Message::TimePoint;
 
     protected:
 
-    const Message& msg_;
+    Message::ConstPtr msg_;
+
+    public:// have to leave constructors public for pybind11
+
+    PingMessage(const Message::ConstPtr& msg) : msg_(msg) {}
     
     public:
 
-    PingMessage(const Message& msg) : msg_(msg) {}
+    const OculusMessageHeader&  header()    const { return msg_->header();    }
+    const std::vector<uint8_t>& data()      const { return msg_->data();      }
+    const TimePoint&            timestamp() const { return msg_->timestamp(); }
 
-    const OculusMessageHeader&  header()    const { return msg_.header();    }
-    const std::vector<uint8_t>& data()      const { return msg_.data();      }
-    const TimePoint&            timestamp() const { return msg_.timestamp(); }
+    virtual Ptr copy() const = 0;
     
     virtual uint16_t       range_count()   const = 0;
     virtual uint16_t       bearing_count() const = 0;
     virtual const int16_t* bearing_data()  const = 0;
     virtual const uint8_t* ping_data()     const = 0;
     
-    virtual bool    has_gains()       const = 0;
-    virtual uint8_t master_mode()     const = 0;
-    virtual uint8_t sample_size()     const = 0;
+    virtual bool    has_gains()   const = 0;
+    virtual uint8_t master_mode() const = 0;
+    virtual uint8_t sample_size() const = 0;
 };
 
 class PingMessage1 : public PingMessage
 {
-    protected:
+    public:
 
-    const OculusSimplePingResult& metadata_;
+    using Ptr      = std::shared_ptr<PingMessage1>;
+    using ConstPtr = std::shared_ptr<const PingMessage1>;
+
+    //protected:
+    public:// have to leave constructors public for pybind11
+
+    PingMessage1(const Message::ConstPtr& msg) :
+        PingMessage(msg)
+    {
+        if(!is_ping_v1(*msg)) {
+            throw std::runtime_error(
+                "Tried to instanciate a PingMessage1 with the wrong message type.");
+        }
+    }
 
     public:
 
@@ -119,46 +153,47 @@ class PingMessage1 : public PingMessage
         return msg.message_id() == messageSimplePingResult && msg.message_version() != 2;
     }
 
-    PingMessage1(const Message& msg) :
-        PingMessage(msg),
-        metadata_(*reinterpret_cast<const OculusSimplePingResult*>(msg.data().data()))
-    {
-        if(!is_ping_v1(msg)) {
-            throw std::runtime_error(
-                "Tried to instanciate a PingMessage1 with the wrong message type.");
-        }
+    static Ptr Create(const Message::ConstPtr& msg) {
+        if(!msg || !is_ping_v1(*msg))
+            return nullptr;
+        return Ptr(new PingMessage1(msg));
     }
 
-    const OculusSimplePingResult& metadata() const { return metadata_; }
+    //virtual Ptr copy() const { return Create(this->msg_->copy()); } // not compiling
+    virtual PingMessage::Ptr copy() const { return Create(this->msg_->copy()); }
 
-    virtual uint16_t       range_count()   const { return metadata_.nRanges; }
-    virtual uint16_t       bearing_count() const { return metadata_.nBeams;  }
+    const OculusSimplePingResult& metadata() const {
+        return *reinterpret_cast<const OculusSimplePingResult*>(this->msg_->data().data());
+    }
+
+    virtual uint16_t       range_count()   const { return this->metadata().nRanges; }
+    virtual uint16_t       bearing_count() const { return this->metadata().nBeams;  }
     virtual const int16_t* bearing_data()  const {
-        return (const int16_t*)(this->data().data() + sizeof(metadata_));
+        return (const int16_t*)(this->data().data() + sizeof(this->metadata()));
     }
     virtual const uint8_t* ping_data() const {
-        return this->data().data() + metadata_.imageOffset;
+        return this->data().data() + this->metadata().imageOffset;
     }
 
-    virtual bool    has_gains()       const { return metadata_.fireMessage.flags | 0x4; }
-    virtual uint8_t master_mode()     const { return metadata_.fireMessage.masterMode;  }
+    virtual bool    has_gains()       const { return this->metadata().fireMessage.flags | 0x4; }
+    virtual uint8_t master_mode()     const { return this->metadata().fireMessage.masterMode;  }
     virtual uint8_t sample_size()     const {
-        switch(metadata_.dataSize) {
+        switch(this->metadata().dataSize) {
             case dataSize8Bit:  return 1; break;
             case dataSize16Bit: return 2; break;
             case dataSize24Bit: return 3; break;
             case dataSize32Bit: return 4; break;
             default:
                 //invalid value in metadata.dataSize. Deducing from message size.
-                auto lineStep = metadata_.imageSize / metadata_.nRanges;
-                if(lineStep*metadata_.nRanges != metadata_.imageSize) {
+                auto lineStep = this->metadata().imageSize / this->metadata().nRanges;
+                if(lineStep*this->metadata().nRanges != this->metadata().imageSize) {
                     return 0;
                 }
                 if(this->has_gains())
                     lineStep -= 4;
-                auto sampleSize = lineStep / metadata_.nBeams;
+                auto sampleSize = lineStep / this->metadata().nBeams;
                 // Checking integrity
-                if(sampleSize*metadata_.nBeams != lineStep) {
+                if(sampleSize*this->metadata().nBeams != lineStep) {
                     return 0;
                 }
                 return sampleSize;

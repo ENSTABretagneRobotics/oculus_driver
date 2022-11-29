@@ -41,7 +41,7 @@ class SonarDriver : public SonarClient
     using PingCallbacks = CallbackQueue<const PingResult&,
                                         const std::vector<uint8_t>&>; 
     using DummyCallbacks   = CallbackQueue<const OculusMessageHeader&>;
-    using MessageCallbacks = CallbackQueue<const Message&>;
+    using MessageCallbacks = CallbackQueue<const Message::ConstPtr&>;
     using ConfigCallback   = CallbackQueue<const PingConfig&, const PingConfig&>;
 
     using TimeSource = SonarClient::TimeSource;
@@ -73,7 +73,7 @@ class SonarDriver : public SonarClient
     void resume();
     
     virtual void on_connect();
-    virtual void handle_message(const Message& message);
+    virtual void handle_message(const Message::ConstPtr& message);
 
     /////////////////////////////////////////////
     // All remaining member function are related to callbacks and are merely

@@ -144,6 +144,9 @@ class Recorder
     std::size_t write(const blueprint::LogItem& header,
                       const uint8_t* data) const;
     std::size_t write(const Message& message) const;
+    std::size_t write(const Message::ConstPtr& message) const {
+        return this->write(*message);
+    }
 };
 
 class FileReader
@@ -165,7 +168,7 @@ class FileReader
     mutable std::size_t        itemPosition_;
     blueprint::LogHeader       fileHeader_;
 
-    std::shared_ptr<Message> message_;
+    Message::Ptr message_;
 
     void read_next_header() const;
 
@@ -189,8 +192,8 @@ class FileReader
     // These are for convenience
     std::size_t read_next_item(std::vector<uint8_t>& dst) const;
 
-    std::shared_ptr<const Message>     read_next_message() const;
-    std::shared_ptr<const PingMessage> read_next_ping()    const;
+    Message::ConstPtr     read_next_message() const;
+    PingMessage::ConstPtr read_next_ping()    const;
 };
 
 } // namespace oculus

@@ -88,7 +88,7 @@ class SonarClient
     StatusListener             statusListener_;
     StatusListener::CallbackId statusCallbackId_;
 
-    Message message_;
+    Message::Ptr message_;
 
     // helper stubs
     void checker_callback(const boost::system::error_code& err);
@@ -120,12 +120,12 @@ class SonarClient
     
     // This is called regardless of the content of the message.
     // To be reimplemented in a subclass (does nothing by default).
-    virtual void handle_message(const Message& msg);
+    virtual void handle_message(const Message::ConstPtr& msg);
 
     template <typename TimeT = float>
     TimeT time_since_last_message() const { return clock_.now<TimeT>(); }
 
-    TimePoint last_header_stamp() const { return message_.timestamp(); }
+    TimePoint last_header_stamp() const { return message_->timestamp(); }
 };
 
 } //namespace oculus
