@@ -7,10 +7,10 @@ namespace py = pybind11;
 #include <oculus_driver/SonarDriver.h>
 #include <oculus_driver/Recorder.h>
 
-#include "utils.h"
+#include "oculus_message.h"
 #include "oculus_files.h"
 
-inline void message_callback_wrapper(py::object callback, const oculus::Message& msg)
+inline void message_callback_wrapper(py::object callback, const oculus::Message::ConstPtr& msg)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -121,7 +121,7 @@ struct OculusPythonHandle
             sonar_.remove_message_callback(recorderCallbackId_);
         }
     }
-    void recorder_callback(const oculus::Message& msg) const {
+    void recorder_callback(const oculus::Message::ConstPtr& msg) const {
         recorder_.write(msg);
     }
     bool is_recording() const {
@@ -233,36 +233,38 @@ PYBIND11_MODULE(oculus_python, m_)
             return oss.str();
         });
 
-    py::class_<oculus::Message>(m_, "OculusMessage")
-        .def(py::init<>())
-        .def("header", &oculus::Message::header)
-        .def("data",   [](const oculus::Message& msg) { return make_memory_view(msg.data()); })
-        .def("__str__", [](const oculus::Message& msg) {
-            std::ostringstream oss;
-            oss << "OculusMessage :\n" << msg.header();
-            return oss.str();
-        });
+    //py::class_<oculus::Message, oculus::Message::Ptr>(m_, "OculusMessage")
+    //    .def(py::init<>())
+    //    .def("header", &oculus::Message::header)
+    //    .def("data",   [](const oculus::Message::ConstPtr& msg) {
+    //        return make_memory_view(msg->data());
+    //     })
+    //    .def("__str__", [](const oculus::Message::ConstPtr& msg) {
+    //        std::ostringstream oss;
+    //        oss << "OculusMessage :\n" << msg->header();
+    //        return oss.str();
+    //    });
 
-    py::class_<oculus::PingMessage1>(m_, "PingMessage1")
-        .def(py::init<const oculus::Message&>())
-        .def("header",        &oculus::PingMessage1::header)
-        .def("data",          [](const oculus::PingMessage1& msg) {
-            return make_memory_view(msg.data());
-        })
-        .def("range_count",   &oculus::PingMessage1::range_count)
-        .def("bearing_count", &oculus::PingMessage1::bearing_count)
-        .def("bearing_data",  [](const oculus::PingMessage1& msg) {
-            return make_memory_view(msg.bearing_count(), msg.bearing_data());
-        })
-        .def("raw_ping_data", [](const oculus::PingMessage1& msg) {
-            return make_raw_ping_data_view(msg);
-        })
-        .def("gains", [](const oculus::PingMessage1& msg) {
-            return make_gains_view(msg);
-        })
-        .def("ping_data", [](const oculus::PingMessage1& msg) {
-            return make_ping_data_view(msg);
-        });
+    //py::class_<oculus::PingMessage1, oculus::PingMessage1::Ptr>(m_, "PingMessage1")
+    //    .def(py::init<const oculus::Message::ConstPtr&>())
+    //    .def("header",        &oculus::PingMessage1::header)
+    //    .def("data",          [](const oculus::PingMessage1::ConstPtr& msg) {
+    //        return make_memory_view(msg->data());
+    //    })
+    //    .def("range_count",   &oculus::PingMessage1::range_count)
+    //    .def("bearing_count", &oculus::PingMessage1::bearing_count)
+    //    .def("bearing_data",  [](const oculus::PingMessage1::ConstPtr& msg) {
+    //        return make_memory_view(msg->bearing_count(), msg->bearing_data());
+    //    })
+    //    .def("raw_ping_data", [](const oculus::PingMessage1::ConstPtr& msg) {
+    //        return make_raw_ping_data_view(*msg);
+    //    })
+    //    .def("gains", [](const oculus::PingMessage1::ConstPtr& msg) {
+    //        return make_gains_view(*msg);
+    //    })
+    //    .def("ping_data", [](const oculus::PingMessage1::ConstPtr& msg) {
+    //        return make_ping_data_view(*msg);
+    //    });
 
     py::class_<OculusPythonHandle>(m_, "OculusSonar")
         .def(py::init<>())
@@ -282,6 +284,7 @@ PYBIND11_MODULE(oculus_python, m_)
         .def("recorder_stop",  &OculusPythonHandle::recorder_stop)
         .def("is_recording",   &OculusPythonHandle::is_recording);
 
+    init_oculus_message(m_);
     init_oculus_python_files(m_);
 }
 

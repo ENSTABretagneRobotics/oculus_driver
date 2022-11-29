@@ -8,6 +8,8 @@ namespace py = pybind11;
 
 #include <oculus_driver/OculusMessage.h>
 
+#include "oculus_message.h"
+
 template <typename T>
 inline py::memoryview make_memory_view(std::size_t size, const T* data)
 {
@@ -37,7 +39,7 @@ inline py::memoryview make_memory_view(const oculus::Message& msg)
     return make_memory_view(msg.data());
 }
 
-inline py::memoryview make_raw_ping_data_view(const oculus::PingMessage& msg)
+inline py::memoryview make_raw_ping_data_view(const PyPingMessage& msg)
 {
     auto width = msg.bearing_count();
     switch(msg.sample_size()) {
@@ -61,7 +63,7 @@ inline py::memoryview make_raw_ping_data_view(const oculus::PingMessage& msg)
     }
 }
 
-inline py::memoryview make_gains_view(const oculus::PingMessage& msg)
+inline py::memoryview make_gains_view(const PyPingMessage& msg)
 {
     if(!msg.has_gains()) {
         return py::none();
@@ -74,7 +76,7 @@ inline py::memoryview make_gains_view(const oculus::PingMessage& msg)
                           1, {msg.range_count()}, {step}));
 }
 
-inline py::memoryview make_ping_data_view(const oculus::PingMessage& msg)
+inline py::memoryview make_ping_data_view(const PyPingMessage& msg)
 {
     std::size_t step   = msg.sample_size()*msg.bearing_count();
     std::size_t offset = 0;

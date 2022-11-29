@@ -17,6 +17,7 @@ endif()
 
 
 pybind11_add_module(oculus_python
+    src/oculus_message.cpp
     src/oculus_files.cpp
     src/oculus_python.cpp
 )
