@@ -87,8 +87,9 @@ SonarDriver::PingConfig SonarDriver::current_ping_config()
     return config;
 }
 
-SonarDriver::PingConfig SonarDriver::request_ping_config(const PingConfig& request)
+SonarDriver::PingConfig SonarDriver::request_ping_config(PingConfig request)
 {
+    request.flags |= 0x4; // forcing sonar sending gains to true
     using Timeout = CallbackQueue<const Message::ConstPtr&>::TimeoutReached;
 
     // Waiting for a ping or a dummy message to have a feedback on the config changes.

@@ -68,7 +68,7 @@ class SonarDriver : public SonarClient
 
     bool send_ping_config(PingConfig config);
     PingConfig current_ping_config();
-    PingConfig request_ping_config(const PingConfig& request);
+    PingConfig request_ping_config(PingConfig request);
     PingConfig last_ping_config() const;
 
     // Stanby mode (saves current ping rate and set it to 0 on the sonar
