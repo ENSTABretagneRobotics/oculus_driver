@@ -7,20 +7,8 @@ namespace py = pybind11;
 #include <oculus_driver/SonarDriver.h>
 #include <oculus_driver/Recorder.h>
 
+#include "utils.h"
 #include "oculus_files.h"
-
-inline py::memoryview make_memory_view(const std::vector<uint8_t>& data)
-{
-    return py::memoryview(py::buffer_info(const_cast<uint8_t*>(data.data()),
-                          sizeof(uint8_t),
-                          py::format_descriptor<uint8_t>::format(),
-                          1, {data.size()}, {1}));
-}
-
-inline py::memoryview make_memory_view(const oculus::Message& msg)
-{
-    return make_memory_view(msg.data());
-}
 
 inline void message_callback_wrapper(py::object callback, const oculus::Message& msg)
 {
@@ -248,11 +236,32 @@ PYBIND11_MODULE(oculus_python, m_)
     py::class_<oculus::Message>(m_, "OculusMessage")
         .def(py::init<>())
         .def("header", &oculus::Message::header)
-        .def("data", [](const oculus::Message& msg) { return make_memory_view(msg.data()); })
+        .def("data",   [](const oculus::Message& msg) { return make_memory_view(msg.data()); })
         .def("__str__", [](const oculus::Message& msg) {
             std::ostringstream oss;
             oss << "OculusMessage :\n" << msg.header();
             return oss.str();
+        });
+
+    py::class_<oculus::PingMessage1>(m_, "PingMessage1")
+        .def(py::init<const oculus::Message&>())
+        .def("header",        &oculus::PingMessage1::header)
+        .def("data",          [](const oculus::PingMessage1& msg) {
+            return make_memory_view(msg.data());
+        })
+        .def("range_count",   &oculus::PingMessage1::range_count)
+        .def("bearing_count", &oculus::PingMessage1::bearing_count)
+        .def("bearing_data",  [](const oculus::PingMessage1& msg) {
+            return make_memory_view(msg.bearing_count(), msg.bearing_data());
+        })
+        .def("raw_ping_data", [](const oculus::PingMessage1& msg) {
+            return make_raw_ping_data_view(msg);
+        })
+        .def("gains", [](const oculus::PingMessage1& msg) {
+            return make_gains_view(msg);
+        })
+        .def("ping_data", [](const oculus::PingMessage1& msg) {
+            return make_ping_data_view(msg);
         });
 
     py::class_<OculusPythonHandle>(m_, "OculusSonar")
