@@ -18,6 +18,8 @@
 
 #include <oculus_driver/AsyncService.h>
 
+#include <boost/bind.hpp>
+
 namespace oculus {
 
 AsyncService::AsyncService() :

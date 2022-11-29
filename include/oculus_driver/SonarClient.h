@@ -29,9 +29,7 @@
 #include <chrono>
 #include <type_traits>
 
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
 
 #include <oculus_driver/Oculus.h>
 #include <oculus_driver/utils.h>
@@ -85,8 +83,8 @@ class SonarClient
     boost::asio::deadline_timer  checkerTimer_;
     Clock                        clock_;
     
-    StatusListener             statusListener_;
-    StatusListener::CallbackId statusCallbackId_;
+    StatusListener statusListener_;
+    unsigned int   statusCallbackId_;
 
     Message::Ptr message_;
 
@@ -108,7 +106,7 @@ class SonarClient
     void reset_connection();
     void close_connection();
     void on_first_status(const OculusStatusMsg& msg);
-    void on_connect(const boost::system::error_code& err);
+    void connect_callback(const boost::system::error_code& err);
     virtual void on_connect();
 
     // main loop begin

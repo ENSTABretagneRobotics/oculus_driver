@@ -18,7 +18,9 @@
 
 #include <iostream>
 #include <sstream>
+#include <functional>
 using namespace std;
+using namespace std::placeholders;
 
 #include <oculus_driver/Oculus.h>
 #include <oculus_driver/print_utils.h>
@@ -65,8 +67,9 @@ int main()
     listener.add_callback(&callback1);
 
     CallbackTest test0;
-    listener.add_callback(&CallbackTest::callback2, &test0);
-    listener.add_callback(&CallbackTest::callback3, &test0, 14);
+    listener.add_callback(std::bind(&CallbackTest::callback2, &test0, _1));
+    listener.add_callback(std::bind(&CallbackTest::callback3, &test0, 14, _1));
+    listener.add_callback(std::bind(&CallbackTest::callback4, &test0, _1, 16));
 
     // this fail at compile time
     //listener.add_callback(&CallbackTest::callback4, &test0, 14);

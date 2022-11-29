@@ -20,6 +20,8 @@
 
 namespace oculus {
 
+using namespace std::placeholders;
+
 StatusListener::StatusListener(const IoServicePtr& service,
                                unsigned short listeningPort) :
     socket_(*service),
@@ -43,18 +45,26 @@ StatusListener::StatusListener(const IoServicePtr& service,
 void StatusListener::get_one_message()
 {
     socket_.async_receive(boost::asio::buffer(static_cast<void*>(&msg_), sizeof(msg_)),
-                          boost::bind(&StatusListener::message_callback, this, _1, _2));
+                          std::bind(&StatusListener::message_callback, this, _1, _2));
 }
 
-StatusListener::CallbackId StatusListener::add_callback(const CallbackT& callback)
+unsigned int StatusListener::add_callback(
+    const std::function<void(const OculusStatusMsg&)>& callback)
 {
     return callbacks_.add_callback(callback);
 }
 
-bool StatusListener::remove_callback(CallbackId index)
+bool StatusListener::remove_callback(unsigned int index)
 {
     return callbacks_.remove_callback(index);
 }
+
+bool StatusListener::on_next_status(
+    const std::function<void(const OculusStatusMsg&)>& callback)
+{
+    return callbacks_.add_single_shot(callback);
+}
+
 
 void StatusListener::message_callback(const boost::system::error_code& err,
                                       std::size_t bytesReceived)
@@ -76,11 +86,6 @@ void StatusListener::message_callback(const boost::system::error_code& err,
     //std::cout << msg_ << std::endl;
     callbacks_.call(msg_);
     this->get_one_message();
-}
-
-bool StatusListener::on_next_status(const CallbackT& callback)
-{
-    return callbacks_.add_single_shot(callback);
 }
 
 } //namespace oculus

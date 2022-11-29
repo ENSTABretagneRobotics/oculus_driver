@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/asio.hpp>
 
 #include <oculus_driver/Oculus.h>

@@ -23,9 +23,7 @@
 #include <thread>
 #include <memory>
 
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
 
 namespace oculus {
 

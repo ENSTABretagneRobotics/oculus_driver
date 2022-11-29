@@ -20,6 +20,8 @@
 
 namespace oculus {
 
+using namespace std::placeholders;
+
 SonarClient::SonarClient(const IoServicePtr& service,
                          const Duration& checkerPeriod) :
     ioService_(service),
@@ -115,7 +117,8 @@ void SonarClient::reset_connection()
 {
     connectionState_ = Attempt;
     this->close_connection(); // closing previous connection
-    statusCallbackId_ = statusListener_.add_callback(&SonarClient::on_first_status, this);
+    statusCallbackId_ = statusListener_.add_callback(
+        std::bind(&SonarClient::on_first_status, this, _1));
 }
 
 void SonarClient::close_connection()
@@ -154,10 +157,10 @@ void SonarClient::on_first_status(const OculusStatusMsg& msg)
 
     // attempting connection
     socket_ = std::make_unique<Socket>(*ioService_);
-    socket_->async_connect(remote_, boost::bind(&SonarClient::on_connect, this, _1));
+    socket_->async_connect(remote_, std::bind(&SonarClient::connect_callback, this, _1));
 }
 
-void SonarClient::on_connect(const boost::system::error_code& err)
+void SonarClient::connect_callback(const boost::system::error_code& err)
 {
     if(err) {
         std::ostringstream oss;
@@ -195,7 +198,7 @@ void SonarClient::initiate_receive()
     boost::asio::async_read(*socket_,
         boost::asio::buffer(reinterpret_cast<uint8_t*>(&message_->header_), 
                             sizeof(message_->header_)),
-        boost::bind(&SonarClient::header_received_callback, this, _1, _2));
+        std::bind(&SonarClient::header_received_callback, this, _1, _2));
 }
 
 void SonarClient::header_received_callback(const boost::system::error_code err,
@@ -225,7 +228,7 @@ void SonarClient::header_received_callback(const boost::system::error_code err,
     message_->update_from_header();
     boost::asio::async_read(*socket_,
         boost::asio::buffer(message_->payload_handle(), message_->payload_size()),
-        boost::bind(&SonarClient::data_received_callback, this, _1, _2));
+        std::bind(&SonarClient::data_received_callback, this, _1, _2));
 }
 
 void SonarClient::data_received_callback(const boost::system::error_code err,
