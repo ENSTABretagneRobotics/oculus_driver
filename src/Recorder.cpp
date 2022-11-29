@@ -235,5 +235,22 @@ std::shared_ptr<const Message> FileReader::read_next_message() const
     return message_;
 }
 
+std::shared_ptr<const PingMessage> FileReader::read_next_ping() const
+{
+    std::shared_ptr<const Message> msg = this->read_next_message();
+    while(msg && !msg->is_ping_message()) {
+        msg = this->read_next_message();
+    }
+    if(!msg)
+        return nullptr;
+
+    if(msg->message_version() == 2) {
+        throw std::runtime_error("PingMessage2 not implemented");
+    }
+    else {
+        return std::make_shared<PingMessage1>(*msg);
+    }
+}
+
 } //namespace oculus
 

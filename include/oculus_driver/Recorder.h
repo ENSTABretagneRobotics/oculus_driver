@@ -188,7 +188,9 @@ class FileReader
 
     // These are for convenience
     std::size_t read_next_item(std::vector<uint8_t>& dst) const;
-    std::shared_ptr<const Message> read_next_message() const;
+
+    std::shared_ptr<const Message>     read_next_message() const;
+    std::shared_ptr<const PingMessage> read_next_ping()    const;
 };
 
 } // namespace oculus

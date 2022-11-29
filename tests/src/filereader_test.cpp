@@ -13,9 +13,20 @@ int main(int argc, char** argv)
     cout << "Opening file : " << argv[1] << endl;
 
     FileReader file(argv[1]);
-    while(auto msg = file.read_next_message()) {
-        cout << "Got item : " << msg->header() << endl;
+    //while(auto msg = file.read_next_ping()) {
+    //    cout << "Got ping item : " << msg->header() << endl;
+    //    cout << "size : " <<  msg->bearing_count() << 'x' << msg->range_count() << endl;
+    //}
+    auto msg = file.read_next_ping();
+    cout << "Got ping    : " << msg->header() << endl;
+    cout << "size        : " <<  msg->bearing_count() << 'x' << msg->range_count() << endl;
+    cout << "master mode : " << (unsigned int)msg->master_mode() << endl;
+    cout << "bearings :\n";
+    auto bearingData = msg->bearing_data();
+    for(int i = 0; i < msg->bearing_count(); i++) {
+        cout << ' ' << 0.01 * bearingData[i];
     }
+    cout << endl;
 
     return 0;
 }
