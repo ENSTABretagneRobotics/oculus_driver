@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(oculus_driver VERSION 1.1)
+project(oculus_driver VERSION 1.2)
 
 option(BUILD_TESTS "Build unit tests" OFF)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DefaultBuildType.cmake)
