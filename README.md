@@ -14,6 +14,14 @@ work out of the box with other systems.
 
 ## Compiling and installing the oculus_driver library
 
+### Install dependencies
+
+```
+sudo apt-get install -y libboost-system-dev libboost-thread-dev
+```
+
+### Compile the oculus_dirver library
+
 This library follows a standard CMake compilation procedure.
 
 Create a build directory :
