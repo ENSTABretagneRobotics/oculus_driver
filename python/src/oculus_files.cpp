@@ -12,7 +12,6 @@ struct OculusFileReader
     oculus::FileReader           file_;
     oculus::blueprint::LogItem   msgHeader_;
     std::vector<uint8_t>         data_;
-    //mutable std::shared_ptr<const oculus::PingMessage> refHolder_;
 
     OculusFileReader(const std::string& path) : file_(path) {}
 
@@ -28,8 +27,7 @@ struct OculusFileReader
     py::object read_next_ping() const {
         auto msg = file_.read_next_ping();
         if(msg) {
-            //refHolder_ = msg;
-            return py::cast(PyPingMessage(msg));
+            return py::cast(msg);
         }
         else
             return py::none();

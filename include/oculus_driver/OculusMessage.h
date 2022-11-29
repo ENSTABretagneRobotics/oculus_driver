@@ -92,12 +92,12 @@ class Message
     bool is_ping_message() const { return this->message_id() == messageSimplePingResult; }
 };
 
-class PingMessage
+class PingWrapper
 {
     public:
 
-    using Ptr      = std::shared_ptr<PingMessage>;
-    using ConstPtr = std::shared_ptr<const PingMessage>;
+    using Ptr      = std::shared_ptr<PingWrapper>;
+    using ConstPtr = std::shared_ptr<const PingWrapper>;
 
     using TimeSource = Message::TimeSource;
     using TimePoint  = Message::TimePoint;
@@ -106,12 +106,18 @@ class PingMessage
 
     Message::ConstPtr msg_;
 
-    public:// have to leave constructors public for pybind11
-
-    PingMessage(const Message::ConstPtr& msg) : msg_(msg) {}
+    PingWrapper(const Message::ConstPtr& msg) : msg_(msg) {
+        if(!msg_) {
+            throw std::runtime_error("Trying to make a PingMessage out of empty data.");
+        }
+        if(!msg_->is_ping_message()) {
+            throw std::runtime_error("Trying to make a PingMessage out of non-ping data.");
+        }
+    }
     
     public:
 
+    Message::ConstPtr           message()   const { return msg_;              }
     const OculusMessageHeader&  header()    const { return msg_->header();    }
     const std::vector<uint8_t>& data()      const { return msg_->data();      }
     const TimePoint&            timestamp() const { return msg_->timestamp(); }
@@ -128,39 +134,30 @@ class PingMessage
     virtual uint8_t sample_size() const = 0;
 };
 
-class PingMessage1 : public PingMessage
+class PingWrapper1 : public PingWrapper
 {
     public:
 
-    using Ptr      = std::shared_ptr<PingMessage1>;
-    using ConstPtr = std::shared_ptr<const PingMessage1>;
+    using Ptr      = std::shared_ptr<PingWrapper1>;
+    using ConstPtr = std::shared_ptr<const PingWrapper1>;
 
-    //protected:
-    public:// have to leave constructors public for pybind11
+    protected:
 
-    PingMessage1(const Message::ConstPtr& msg) :
-        PingMessage(msg)
+    PingWrapper1(const Message::ConstPtr& msg) :
+        PingWrapper(msg)
     {
-        if(!is_ping_v1(*msg)) {
+        if(msg->message_version() == 2) {
             throw std::runtime_error(
-                "Tried to instanciate a PingMessage1 with the wrong message type.");
+                "Tried to instanciate a PingWrapper1 with data from a PingWrapper2");
         }
     }
 
     public:
 
-    static bool is_ping_v1(const Message& msg) {
-        return msg.message_id() == messageSimplePingResult && msg.message_version() != 2;
-    }
-
-    static Ptr Create(const Message::ConstPtr& msg) {
-        if(!msg || !is_ping_v1(*msg))
-            return nullptr;
-        return Ptr(new PingMessage1(msg));
-    }
+    static Ptr Create(const Message::ConstPtr& msg) { return Ptr(new PingWrapper1(msg)); }
 
     //virtual Ptr copy() const { return Create(this->msg_->copy()); } // not compiling
-    virtual PingMessage::Ptr copy() const { return Create(this->msg_->copy()); }
+    virtual PingWrapper::Ptr copy() const { return Create(this->msg_->copy()); }
 
     const OculusSimplePingResult& metadata() const {
         return *reinterpret_cast<const OculusSimplePingResult*>(this->msg_->data().data());
@@ -201,6 +198,58 @@ class PingMessage1 : public PingMessage
         }
     }
 };
+
+class PingMessage
+{
+    public:
+
+    using Ptr      = std::shared_ptr<PingMessage>;
+    using ConstPtr = std::shared_ptr<const PingMessage>;
+
+    using TimeSource = Message::TimeSource;
+    using TimePoint  = Message::TimePoint;
+
+    static PingWrapper::Ptr make_ping_wrapper(const Message::ConstPtr& msg) {
+        if(!msg || !msg->is_ping_message()) {
+            return nullptr;
+        }
+        if(msg->message_version() == 2) {
+            throw std::runtime_error("Not implemented");
+        }
+        else {
+            return PingWrapper1::Create(msg);
+        }
+    }
+
+    protected:
+
+    PingWrapper::ConstPtr pingData_;
+
+    public: // for pybind11
+
+    PingMessage(const Message::ConstPtr& msg) :
+        pingData_(make_ping_wrapper(msg))
+    {}
+
+    public:
+
+    static Ptr Create(const Message::ConstPtr& msg) { return Ptr(new PingMessage(msg)); }
+
+    Message::ConstPtr           message()   const { return pingData_->message();   }
+    const OculusMessageHeader&  header()    const { return pingData_->header();    }
+    const std::vector<uint8_t>& data()      const { return pingData_->data();      }
+    const TimePoint&            timestamp() const { return pingData_->timestamp(); }
+    
+    uint16_t       range_count()   const { return pingData_->range_count();   }
+    uint16_t       bearing_count() const { return pingData_->bearing_count(); }
+    const int16_t* bearing_data()  const { return pingData_->bearing_data();  }
+    const uint8_t* ping_data()     const { return pingData_->ping_data();     }
+    
+    bool    has_gains()   const { return pingData_->has_gains();   }
+    uint8_t master_mode() const { return pingData_->master_mode(); }
+    uint8_t sample_size() const { return pingData_->sample_size(); }
+};
+
 
 } //namespace oculus
 

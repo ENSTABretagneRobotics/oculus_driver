@@ -243,13 +243,7 @@ PingMessage::ConstPtr FileReader::read_next_ping() const
     }
     if(!msg)
         return nullptr;
-
-    if(msg->message_version() == 2) {
-        throw std::runtime_error("PingMessage2 not implemented");
-    }
-    else {
-        return PingMessage1::Create(msg);
-    }
+    return PingMessage::Create(msg);
 }
 
 } //namespace oculus

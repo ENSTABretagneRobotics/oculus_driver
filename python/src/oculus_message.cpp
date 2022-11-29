@@ -24,25 +24,25 @@ void init_oculus_message(py::module& m_)
             return oss.str();
         });
 
-    py::class_<PyPingMessage>(m_, "PingMessage")
-        .def(py::init<const oculus::PingMessage::ConstPtr&>())
-        .def("header",        &PyPingMessage::header)
-        .def("data",          [](const PyPingMessage& msg) {
-            return make_memory_view(msg.data());
+    py::class_<oculus::PingMessage, oculus::PingMessage::Ptr>(m_, "PingMessage")
+        .def(py::init<oculus::Message::ConstPtr>())
+        .def("message", &oculus::PingMessage::message)
+        .def("data",          [](const oculus::PingMessage::ConstPtr& msg) {
+            return make_memory_view(msg->data());
         })
-        .def("range_count",   &PyPingMessage::range_count)
-        .def("bearing_count", &PyPingMessage::bearing_count)
-        .def("bearing_data",  [](const PyPingMessage& msg) {
-            return make_memory_view(msg.bearing_count(), msg.bearing_data());
+        .def("range_count",   &oculus::PingMessage::range_count)
+        .def("bearing_count", &oculus::PingMessage::bearing_count)
+        .def("bearing_data",  [](const oculus::PingMessage::ConstPtr& msg) {
+            return make_memory_view(msg->bearing_count(), msg->bearing_data());
         })
-        .def("raw_ping_data", [](const PyPingMessage& msg) {
-            return make_raw_ping_data_view(msg);
+        .def("raw_ping_data", [](const oculus::PingMessage::ConstPtr& msg) {
+            return make_raw_ping_data_view(*msg);
         })
-        .def("gains", [](const PyPingMessage& msg) {
-            return make_gains_view(msg);
+        .def("gains", [](const oculus::PingMessage::ConstPtr& msg) {
+            return make_gains_view(*msg);
         })
-        .def("ping_data", [](const PyPingMessage& msg) {
-            return make_ping_data_view(msg);
+        .def("ping_data", [](const oculus::PingMessage::ConstPtr& msg) {
+            return make_ping_data_view(*msg);
         });
 }
 
