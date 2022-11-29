@@ -103,8 +103,8 @@ class PingMessage
     virtual const uint8_t* ping_data()     const = 0;
     
     virtual bool    has_gains()       const = 0;
-    virtual bool    has_16bits_data() const = 0;
     virtual uint8_t master_mode()     const = 0;
+    virtual uint8_t sample_size()     const = 0;
 };
 
 class PingMessage1 : public PingMessage
@@ -141,8 +141,30 @@ class PingMessage1 : public PingMessage
     }
 
     virtual bool    has_gains()       const { return metadata_.fireMessage.flags | 0x4; }
-    virtual bool    has_16bits_data() const { return metadata_.fireMessage.flags | 0x2; }
     virtual uint8_t master_mode()     const { return metadata_.fireMessage.masterMode;  }
+    virtual uint8_t sample_size()     const {
+        switch(metadata_.dataSize) {
+            case dataSize8Bit:  return 1; break;
+            case dataSize16Bit: return 2; break;
+            case dataSize24Bit: return 3; break;
+            case dataSize32Bit: return 4; break;
+            default:
+                //invalid value in metadata.dataSize. Deducing from message size.
+                auto lineStep = metadata_.imageSize / metadata_.nRanges;
+                if(lineStep*metadata_.nRanges != metadata_.imageSize) {
+                    return 0;
+                }
+                if(this->has_gains())
+                    lineStep -= 4;
+                auto sampleSize = lineStep / metadata_.nBeams;
+                // Checking integrity
+                if(sampleSize*metadata_.nBeams != lineStep) {
+                    return 0;
+                }
+                return sampleSize;
+                break;
+        }
+    }
 };
 
 } //namespace oculus

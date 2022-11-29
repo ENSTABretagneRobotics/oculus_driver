@@ -150,7 +150,7 @@ typedef struct
     uint8_t gammaCorrection;      // 0 and 0xff = gamma correction = 1.0
                                   // Set to 127 for gamma correction = 0.5
     uint8_t flags;                // bit 0: 0 = interpret range as percent, 1 = interpret range as meters
-                                  // bit 1: 0 = 8 bit data, 1 = 16 bit data
+                                  // bit 1: 0 = 8 bit data, 1 = 16 bit data // inverted ?
                                   // bit 2: 0 = wont send gain, 1 = send gain
                                   // bit 3: 0 = send full return message, 1 = send simple return message
                                   // bit 4: gain assist ?
