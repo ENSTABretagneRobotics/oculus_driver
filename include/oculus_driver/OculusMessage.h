@@ -122,16 +122,32 @@ class PingWrapper
     const std::vector<uint8_t>& data()      const { return msg_->data();      }
     const TimePoint&            timestamp() const { return msg_->timestamp(); }
 
+    uint32_t step() const {
+        return ((this->has_gains() ? 4 : 0) + this->bearing_count()*this->sample_size());
+    }
+
     virtual Ptr copy() const = 0;
-    
+
     virtual uint16_t       range_count()   const = 0;
     virtual uint16_t       bearing_count() const = 0;
     virtual const int16_t* bearing_data()  const = 0;
     virtual const uint8_t* ping_data()     const = 0;
+    virtual uint32_t       data_size()     const = 0;
     
     virtual bool    has_gains()   const = 0;
     virtual uint8_t master_mode() const = 0;
     virtual uint8_t sample_size() const = 0;
+    
+
+    virtual uint32_t ping_index()          const = 0;
+    virtual uint32_t ping_firing_date()    const = 0;
+    virtual double   range()               const = 0;
+    virtual double   gain_percent()        const = 0;
+    virtual double   frequency()           const = 0;
+    virtual double   speed_of_sound_used() const = 0;
+    virtual double   range_resolution()    const = 0;
+    virtual double   temperature()         const = 0;
+    virtual double   pressure()            const = 0;
 };
 
 class PingWrapper1 : public PingWrapper
@@ -171,6 +187,7 @@ class PingWrapper1 : public PingWrapper
     virtual const uint8_t* ping_data() const {
         return this->data().data() + this->metadata().imageOffset;
     }
+    virtual uint32_t data_size() const { return this->metadata().imageSize; }
 
     virtual bool    has_gains()       const { return this->metadata().fireMessage.flags | 0x4; }
     virtual uint8_t master_mode()     const { return this->metadata().fireMessage.masterMode;  }
@@ -197,6 +214,16 @@ class PingWrapper1 : public PingWrapper
                 break;
         }
     }
+
+    virtual uint32_t ping_index()          const { return this->metadata().pingId;                  }
+    virtual uint32_t ping_firing_date()    const { return this->metadata().pingStartTime;           }
+    virtual double   range()               const { return this->metadata().fireMessage.range;       }
+    virtual double   gain_percent()        const { return this->metadata().fireMessage.gainPercent; } 
+    virtual double   frequency()           const { return this->metadata().frequency;               }
+    virtual double   speed_of_sound_used() const { return this->metadata().speeedOfSoundUsed;       }
+    virtual double   range_resolution()    const { return this->metadata().rangeResolution;         }
+    virtual double   temperature()         const { return this->metadata().temperature;             }
+    virtual double   pressure()            const { return this->metadata().pressure;                }
 };
 
 class PingWrapper2 : public PingWrapper
@@ -236,6 +263,7 @@ class PingWrapper2 : public PingWrapper
     virtual const uint8_t* ping_data() const {
         return this->data().data() + this->metadata().imageOffset;
     }
+    virtual uint32_t data_size() const { return this->metadata().imageSize; }
 
     //virtual bool    has_gains()   const { return this->metadata().fireMessage.flags | 0x4; } // is broken
     virtual bool has_gains() const {
@@ -265,6 +293,16 @@ class PingWrapper2 : public PingWrapper
                 break;
         }
     }
+
+    virtual uint32_t ping_index()        const { return this->metadata().pingId;                   }
+    virtual uint32_t ping_firing_date()  const { return (uint32_t)this->metadata().pingStartTime;  }
+    virtual double range()               const { return this->metadata().fireMessage.rangePercent; }
+    virtual double gain_percent()        const { return this->metadata().fireMessage.gainPercent;  } 
+    virtual double frequency()           const { return this->metadata().frequency;                }
+    virtual double speed_of_sound_used() const { return this->metadata().speeedOfSoundUsed;        }
+    virtual double range_resolution()    const { return this->metadata().rangeResolution;          }
+    virtual double temperature()         const { return this->metadata().temperature;              }
+    virtual double pressure()            const { return this->metadata().pressure;                 }
 };
 
 class PingMessage
@@ -312,10 +350,22 @@ class PingMessage
     uint16_t       bearing_count() const { return pingData_->bearing_count(); }
     const int16_t* bearing_data()  const { return pingData_->bearing_data();  }
     const uint8_t* ping_data()     const { return pingData_->ping_data();     }
+    uint32_t       step()          const { return pingData_->step();          }
+    uint32_t       data_size()     const { return pingData_->data_size();     }
     
     bool    has_gains()   const { return pingData_->has_gains();   }
     uint8_t master_mode() const { return pingData_->master_mode(); }
     uint8_t sample_size() const { return pingData_->sample_size(); }
+
+    uint32_t ping_index()          const { return pingData_->ping_index();          }
+    uint32_t ping_firing_date()    const { return pingData_->ping_firing_date();    }
+    double   range()               const { return pingData_->range();               }
+    double   gain_percent()        const { return pingData_->gain_percent();        }
+    double   frequency()           const { return pingData_->frequency();           }
+    double   speed_of_sound_used() const { return pingData_->speed_of_sound_used(); }
+    double   range_resolution()    const { return pingData_->range_resolution();    }
+    double   temperature()         const { return pingData_->temperature();         }
+    double   pressure()            const { return pingData_->pressure();            }
 };
 
 

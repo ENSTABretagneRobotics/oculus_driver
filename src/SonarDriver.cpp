@@ -191,7 +191,7 @@ void SonarDriver::handle_message(const Message::ConstPtr& message)
     messageCallbacks_.call(message);
     switch(header.msgId) {
         case messageSimplePingResult:
-            pingCallbacks_.call(*(reinterpret_cast<const PingResult*>(data.data())), data);
+            pingCallbacks_.call(PingMessage::Create(message));
             break;
         case messageDummy:
             dummyCallbacks_.call(header);

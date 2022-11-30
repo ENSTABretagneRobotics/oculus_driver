@@ -41,8 +41,7 @@ class SonarDriver : public SonarClient
 
     using MessageCallback = std::function<void(const Message::ConstPtr&)>;
     using StatusCallback  = std::function<void(const OculusStatusMsg&)>;
-    using PingCallback    = std::function<void(const OculusSimplePingResult&,
-                                               const std::vector<uint8_t>&)>;
+    using PingCallback    = std::function<void(const PingMessage::ConstPtr)>;
     using DummyCallback   = std::function<void(const OculusMessageHeader&)>;
     using ConfigCallback  = std::function<void(const PingConfig&, const PingConfig&)>;
 
@@ -56,10 +55,10 @@ class SonarDriver : public SonarClient
 
     // message callbacks will be called on every received message.
     // config callbacks will be called on (detectable) configuration changes.
-    CallbackQueue<const Message::ConstPtr&>                       messageCallbacks_;
-    CallbackQueue<const PingResult&, const std::vector<uint8_t>&> pingCallbacks_;
-    CallbackQueue<const OculusMessageHeader&>                     dummyCallbacks_;
-    CallbackQueue<const PingConfig&, const PingConfig&>           configCallbacks_;
+    CallbackQueue<const Message::ConstPtr&>             messageCallbacks_;
+    CallbackQueue<const PingMessage::ConstPtr>          pingCallbacks_;
+    CallbackQueue<const OculusMessageHeader&>           dummyCallbacks_;
+    CallbackQueue<const PingConfig&, const PingConfig&> configCallbacks_;
 
     public:
 
