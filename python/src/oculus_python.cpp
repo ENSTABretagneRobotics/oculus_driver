@@ -21,17 +21,12 @@ inline void message_callback_wrapper(py::object callback, const oculus::Message:
 }
 
 inline void ping_callback_wrapper(py::object callback, 
-                                  const OculusSimplePingResult& metadata,
-                                  const std::vector<uint8_t>& data)
+                                  const oculus::PingMessage::ConstPtr& msg)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     
-    callback(py::cast(&metadata),
-             py::memoryview(py::buffer_info(const_cast<uint8_t*>(data.data()),
-                                             sizeof(uint8_t),
-                                             py::format_descriptor<uint8_t>::format(),
-                                             1, {data.size()}, {1})));
+    callback(py::cast(msg));
     
     PyGILState_Release(gstate);
 }
@@ -93,8 +88,7 @@ struct OculusPythonHandle
     }
     void add_ping_callback(py::object obj) {
         sonar_.add_ping_callback(std::bind(ping_callback_wrapper, obj,
-                                           std::placeholders::_1, 
-                                           std::placeholders::_2));
+                                           std::placeholders::_1));
     }
     void add_status_callback(py::object obj) {
         sonar_.add_status_callback(std::bind(status_callback_wrapper, obj,
