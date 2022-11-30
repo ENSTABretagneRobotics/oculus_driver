@@ -132,7 +132,7 @@ class PingWrapper
     virtual uint16_t       bearing_count() const = 0;
     virtual const int16_t* bearing_data()  const = 0;
     virtual const uint8_t* ping_data()     const = 0;
-    virtual uint32_t       data_size()     const = 0;
+    virtual uint32_t       ping_data_size()     const = 0;
     
     virtual bool    has_gains()   const = 0;
     virtual uint8_t master_mode() const = 0;
@@ -187,7 +187,7 @@ class PingWrapper1 : public PingWrapper
     virtual const uint8_t* ping_data() const {
         return this->data().data() + this->metadata().imageOffset;
     }
-    virtual uint32_t data_size() const { return this->metadata().imageSize; }
+    virtual uint32_t ping_data_size() const { return this->metadata().imageSize; }
 
     virtual bool    has_gains()       const { return this->metadata().fireMessage.flags | 0x4; }
     virtual uint8_t master_mode()     const { return this->metadata().fireMessage.masterMode;  }
@@ -263,7 +263,7 @@ class PingWrapper2 : public PingWrapper
     virtual const uint8_t* ping_data() const {
         return this->data().data() + this->metadata().imageOffset;
     }
-    virtual uint32_t data_size() const { return this->metadata().imageSize; }
+    virtual uint32_t ping_data_size() const { return this->metadata().imageSize; }
 
     //virtual bool    has_gains()   const { return this->metadata().fireMessage.flags | 0x4; } // is broken
     virtual bool has_gains() const {
@@ -346,12 +346,18 @@ class PingMessage
     const std::vector<uint8_t>& data()      const { return pingData_->data();      }
     const TimePoint&            timestamp() const { return pingData_->timestamp(); }
     
-    uint16_t       range_count()   const { return pingData_->range_count();   }
-    uint16_t       bearing_count() const { return pingData_->bearing_count(); }
-    const int16_t* bearing_data()  const { return pingData_->bearing_data();  }
-    const uint8_t* ping_data()     const { return pingData_->ping_data();     }
-    uint32_t       step()          const { return pingData_->step();          }
-    uint32_t       data_size()     const { return pingData_->data_size();     }
+    uint16_t       range_count()    const { return pingData_->range_count();   }
+    uint16_t       bearing_count()  const { return pingData_->bearing_count(); }
+    const int16_t* bearing_data()   const { return pingData_->bearing_data();  }
+    const uint8_t* ping_data()      const { return pingData_->ping_data();     }
+    uint32_t       step()           const { return pingData_->step();          }
+    uint32_t       ping_data_size() const { return pingData_->ping_data_size();}
+    uint32_t bearing_data_offset() const {
+        return ((const uint8_t*)this->bearing_data()) - this->data().data();
+    }
+    uint32_t ping_data_offset() const {
+        return this->ping_data() - this->data().data();
+    }
     
     bool    has_gains()   const { return pingData_->has_gains();   }
     uint8_t master_mode() const { return pingData_->master_mode(); }

@@ -30,6 +30,15 @@ void init_oculus_message(py::module& m_)
         .def("data",          [](const oculus::PingMessage::ConstPtr& msg) {
             return make_memory_view(msg->data());
         })
+        .def("metadata", [](const oculus::PingMessage::ConstPtr& msg) {
+            if(msg->message()->message_version() == 2) {
+                return py::cast(*reinterpret_cast<const OculusSimplePingResult2*>(msg->data().data()));
+            }
+            else {
+                return py::cast(*reinterpret_cast<const OculusSimplePingResult*>(msg->data().data()));
+            }
+        })
+
         .def("range_count",   &oculus::PingMessage::range_count)
         .def("bearing_count", &oculus::PingMessage::bearing_count)
         .def("has_gains",     &oculus::PingMessage::has_gains)

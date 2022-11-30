@@ -22,6 +22,7 @@ msg = f.read_next_ping() # this can be called several time to iterate through th
                          # will return None when finished
 if msg is None:
     print('File seems to be empty. Aborting.')
+print(msg.metadata())
 
 bearings     = 0.01*np.array(msg.bearing_data())
 linearAngles = np.linspace(bearings[0], bearings[-1], len(bearings))

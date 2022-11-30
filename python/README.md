@@ -8,12 +8,16 @@ This is pybind11 wrapper around the
 First install the oculus_driver library using fillowing the instruction provided
 in its [README](https://github.com/ENSTABretagneRobotics/oculus_driver).
 
-Then install pybind11 following the instruction
-[here](https://pybind11.readthedocs.io/en/stable/installing.html).
+Then install pybind11 :
+
+```bash
+sudo apt install pybind11-dev
+pyt
+```
 
 The oculus_python package can then be installed using pip :
 
-```
+```bash
 python3 -m pip install --user .
 ```
 

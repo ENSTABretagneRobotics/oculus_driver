@@ -181,6 +181,56 @@ PYBIND11_MODULE(oculus_python, m_)
             return oss.str();
         });
 
+    py::class_<OculusSimpleFireMessage2>(m_, "OculusSimpleFireMessage2")
+        .def(py::init<>())
+        .def_readwrite("head",            &OculusSimpleFireMessage2::head)
+        .def_readwrite("masterMode",      &OculusSimpleFireMessage2::masterMode)
+        .def_readwrite("pingRate",        &OculusSimpleFireMessage2::pingRate)
+        .def_readwrite("networkSpeed",    &OculusSimpleFireMessage2::networkSpeed)
+        .def_readwrite("gammaCorrection", &OculusSimpleFireMessage2::gammaCorrection)
+        .def_readwrite("flags",           &OculusSimpleFireMessage2::flags)
+        .def_readwrite("range",           &OculusSimpleFireMessage2::rangePercent)
+        .def_readwrite("gainPercent",     &OculusSimpleFireMessage2::gainPercent)
+        .def_readwrite("speedOfSound",    &OculusSimpleFireMessage2::speedOfSound)
+        .def_readwrite("salinity",        &OculusSimpleFireMessage2::salinity)
+        .def_readwrite("extFlags",        &OculusSimpleFireMessage2::extFlags)
+        .def("__str__", [](const OculusSimpleFireMessage2& msg) {
+            std::ostringstream oss;
+            oss << msg;
+            return oss.str();
+        });
+
+    py::class_<OculusSimplePingResult2>(m_, "OculusSimplePingResult2")
+        .def(py::init<>())
+        .def_readonly("fireMessage",       &OculusSimplePingResult2::fireMessage)
+        .def_readonly("pingId",            &OculusSimplePingResult2::pingId)
+        .def_readonly("status",            &OculusSimplePingResult2::status)
+        .def_readonly("frequency",         &OculusSimplePingResult2::frequency)
+        .def_readonly("temperature",       &OculusSimplePingResult2::temperature)
+        .def_readonly("pressure",          &OculusSimplePingResult2::pressure)
+        .def_readonly("heading",           &OculusSimplePingResult2::heading)
+        .def_readonly("pitch",             &OculusSimplePingResult2::pitch)
+        .def_readonly("roll",              &OculusSimplePingResult2::roll)
+        .def_readonly("speeedOfSoundUsed", &OculusSimplePingResult2::speeedOfSoundUsed)
+        .def_readonly("pingStartTime",     &OculusSimplePingResult2::pingStartTime)
+        .def_readonly("dataSize",          &OculusSimplePingResult2::dataSize)
+        .def_readonly("rangeResolution",   &OculusSimplePingResult2::rangeResolution)
+        .def_readonly("nRanges",           &OculusSimplePingResult2::nRanges)
+        .def_readonly("nBeams",            &OculusSimplePingResult2::nBeams)
+        .def_readonly("spare0",            &OculusSimplePingResult2::spare0)
+        .def_readonly("spare1",            &OculusSimplePingResult2::spare1)
+        .def_readonly("spare2",            &OculusSimplePingResult2::spare2)
+        .def_readonly("spare3",            &OculusSimplePingResult2::spare3)
+        .def_readonly("imageOffset",       &OculusSimplePingResult2::imageOffset)
+        .def_readonly("imageSize",         &OculusSimplePingResult2::imageSize)
+        .def_readonly("messageSize",       &OculusSimplePingResult2::messageSize)
+        .def("__str__", [](const OculusSimplePingResult2& msg) {
+            std::ostringstream oss;
+            oss << msg;
+            return oss.str();
+        });
+
+
     py::class_<OculusVersionInfo>(m_, "OculusVersionInfo")
         .def(py::init<>())
         .def_readonly("firmwareVersion0", &OculusVersionInfo::firmwareVersion0)
@@ -226,39 +276,6 @@ PYBIND11_MODULE(oculus_python, m_)
             oss << msg;
             return oss.str();
         });
-
-    //py::class_<oculus::Message, oculus::Message::Ptr>(m_, "OculusMessage")
-    //    .def(py::init<>())
-    //    .def("header", &oculus::Message::header)
-    //    .def("data",   [](const oculus::Message::ConstPtr& msg) {
-    //        return make_memory_view(msg->data());
-    //     })
-    //    .def("__str__", [](const oculus::Message::ConstPtr& msg) {
-    //        std::ostringstream oss;
-    //        oss << "OculusMessage :\n" << msg->header();
-    //        return oss.str();
-    //    });
-
-    //py::class_<oculus::PingMessage1, oculus::PingMessage1::Ptr>(m_, "PingMessage1")
-    //    .def(py::init<const oculus::Message::ConstPtr&>())
-    //    .def("header",        &oculus::PingMessage1::header)
-    //    .def("data",          [](const oculus::PingMessage1::ConstPtr& msg) {
-    //        return make_memory_view(msg->data());
-    //    })
-    //    .def("range_count",   &oculus::PingMessage1::range_count)
-    //    .def("bearing_count", &oculus::PingMessage1::bearing_count)
-    //    .def("bearing_data",  [](const oculus::PingMessage1::ConstPtr& msg) {
-    //        return make_memory_view(msg->bearing_count(), msg->bearing_data());
-    //    })
-    //    .def("raw_ping_data", [](const oculus::PingMessage1::ConstPtr& msg) {
-    //        return make_raw_ping_data_view(*msg);
-    //    })
-    //    .def("gains", [](const oculus::PingMessage1::ConstPtr& msg) {
-    //        return make_gains_view(*msg);
-    //    })
-    //    .def("ping_data", [](const oculus::PingMessage1::ConstPtr& msg) {
-    //        return make_ping_data_view(*msg);
-    //    });
 
     py::class_<OculusPythonHandle>(m_, "OculusSonar")
         .def(py::init<>())
