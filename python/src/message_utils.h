@@ -13,19 +13,13 @@ namespace py = pybind11;
 template <typename T>
 inline py::memoryview make_memory_view(std::size_t size, const T* data)
 {
-    return py::memoryview(py::buffer_info(const_cast<T*>(data),
-                          sizeof(T),
-                          py::format_descriptor<T>::format(),
-                          1, {size}, {sizeof(T)}));
+    return py::memoryview::from_buffer(const_cast<T*>(data), {size}, {sizeof(T)});
 }
 
 template <typename T>
 inline py::memoryview make_memory_view(std::size_t width, std::size_t height, const T* data)
 {
-    return py::memoryview(py::buffer_info(const_cast<T*>(data),
-                          sizeof(T),
-                          py::format_descriptor<T>::format(),
-                          2, {height, width}, {sizeof(T)*width, sizeof(T)}));
+    return py::memoryview::from_buffer(const_cast<T*>(data), {height, width}, {sizeof(T)*width, sizeof(T)});
 }
 
 template <typename T>
@@ -70,10 +64,8 @@ inline py::memoryview make_gains_view(const oculus::PingMessage& msg)
     }
 
     auto step = msg.bearing_count()*msg.sample_size() + 4;
-    return py::memoryview(py::buffer_info(const_cast<uint8_t*>(msg.ping_data()),
-                          sizeof(uint32_t),
-                          py::format_descriptor<uint32_t>::format(),
-                          1, {msg.range_count()}, {step}));
+    return py::memoryview::from_buffer((uint32_t*)const_cast<uint8_t*>(msg.ping_data()),
+                                       {msg.range_count()}, {step});
 }
 
 inline py::memoryview make_ping_data_view(const oculus::PingMessage& msg)
@@ -86,28 +78,19 @@ inline py::memoryview make_ping_data_view(const oculus::PingMessage& msg)
     }
     switch(msg.sample_size()) {
         case 1:
-            return py::memoryview(py::buffer_info(const_cast<uint8_t*>(msg.ping_data() + offset),
-                                  sizeof(uint8_t),
-                                  py::format_descriptor<uint8_t>::format(),
-                                  2,
+            return py::memoryview::from_buffer(const_cast<uint8_t*>(msg.ping_data() + offset),
                                   {msg.range_count(), msg.bearing_count()},
-                                  {step, sizeof(uint8_t)}));
+                                  {step, sizeof(uint8_t)});
             break;
         case 2:
-            return py::memoryview(py::buffer_info(const_cast<uint8_t*>(msg.ping_data() + offset),
-                                  sizeof(uint16_t),
-                                  py::format_descriptor<uint16_t>::format(),
-                                  2,
+            return py::memoryview::from_buffer((uint16_t*)const_cast<uint8_t*>(msg.ping_data() + offset),
                                   {msg.range_count(), msg.bearing_count()},
-                                  {step, sizeof(uint16_t)}));
+                                  {step, sizeof(uint16_t)});
             break;
         case 4:
-            return py::memoryview(py::buffer_info(const_cast<uint8_t*>(msg.ping_data() + offset),
-                                  sizeof(uint32_t),
-                                  py::format_descriptor<uint32_t>::format(),
-                                  2,
+            return py::memoryview::from_buffer((uint32_t*)const_cast<uint8_t*>(msg.ping_data() + offset),
                                   {msg.range_count(), msg.bearing_count()},
-                                  {step, sizeof(uint32_t)}));
+                                  {step, sizeof(uint32_t)});
             break;
         default:
             std::cerr << "Unhandled sample_size ("
