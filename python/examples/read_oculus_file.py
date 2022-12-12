@@ -24,6 +24,17 @@ if msg is None:
     print('File seems to be empty. Aborting.')
 print(msg.metadata())
 
+print("timestamp",           msg.timestamp())
+print("timestamp_micros",    msg.timestamp_micros())
+print("ping_index",          msg.ping_index())
+print("range",               msg.range())
+print("gain_percent",        msg.gain_percent())
+print("frequency",           msg.frequency())
+print("speed_of_sound_used", msg.speed_of_sound_used())
+print("range_resolution",    msg.range_resolution())
+print("temperature",         msg.temperature())
+print("pressure",            msg.pressure())
+
 bearings     = 0.01*np.array(msg.bearing_data())
 linearAngles = np.linspace(bearings[0], bearings[-1], len(bearings))
 rawPingData = np.array(msg.raw_ping_data())
