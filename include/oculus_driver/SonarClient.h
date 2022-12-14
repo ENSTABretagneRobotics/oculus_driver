@@ -97,6 +97,8 @@ class SonarClient
     SonarClient(const IoServicePtr& ioService,
                 const Duration& checkerPeriod = boost::posix_time::seconds(1));
 
+    IoServicePtr service() const { return ioService_; }
+
     bool is_valid(const OculusMessageHeader& header);
     bool connected() const;
 

@@ -6,6 +6,7 @@ namespace py = pybind11;
 #include <oculus_driver/AsyncService.h>
 #include <oculus_driver/SonarDriver.h>
 #include <oculus_driver/Recorder.h>
+#include <oculus_driver/StampBroadcaster.h>
 
 #include "oculus_message.h"
 #include "oculus_files.h"
@@ -60,6 +61,9 @@ struct OculusPythonHandle
     oculus::SonarDriver  sonar_;
     oculus::Recorder     recorder_;
     int recorderCallbackId_;
+
+    std::shared_ptr<oculus::StampBroadcaster> stampBroadcaster_;
+    unsigned int broadcasterCallbackId_;
 
     OculusPythonHandle() :
         sonar_(service_.io_service()),
@@ -120,6 +124,22 @@ struct OculusPythonHandle
     }
     bool is_recording() const {
         return recorder_.is_open();
+    }
+
+    void enable_info_broadcast(uint16_t port) {
+        if(stampBroadcaster_ && stampBroadcaster_->is_open()) {
+            return;
+        }
+        stampBroadcaster_ = std::make_shared<oculus::StampBroadcaster>(sonar_, port);
+        broadcasterCallbackId_ =
+            sonar_.add_message_callback(std::bind(&oculus::StampBroadcaster::send,
+                                                  stampBroadcaster_, std::placeholders::_1));
+    }
+    void disable_info_broadcast() {
+        if(stampBroadcaster_) {
+            sonar_.remove_message_callback(broadcasterCallbackId_);
+            stampBroadcaster_ = nullptr;
+        }
     }
 };
 
@@ -293,7 +313,10 @@ PYBIND11_MODULE(oculus_python, m_)
 
         .def("recorder_start", &OculusPythonHandle::recorder_start)
         .def("recorder_stop",  &OculusPythonHandle::recorder_stop)
-        .def("is_recording",   &OculusPythonHandle::is_recording);
+        .def("is_recording",   &OculusPythonHandle::is_recording)
+
+        .def("enable_info_broadcast", &OculusPythonHandle::enable_info_broadcast)
+        .def("disable_info_broadcast", &OculusPythonHandle::disable_info_broadcast);
 
     init_oculus_message(m_);
     init_oculus_python_files(m_);

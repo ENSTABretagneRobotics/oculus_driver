@@ -31,6 +31,8 @@ def message_callback(msg):
     configSet = True
     
 sonar = oculus_python.OculusSonar()
+
+sonar.enable_info_broadcast(26221);
 sonar.start()
 
 sonar.add_message_callback(message_callback)
