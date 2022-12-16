@@ -123,7 +123,7 @@ struct OculusPythonHandle
     }
 };
 
-PYBIND11_MODULE(oculus_python, m_)
+PYBIND11_MODULE(_oculus_python, m_)
 {
     py::class_<OculusMessageHeader>(m_, "OculusMessageHeader")
         .def(py::init<>())

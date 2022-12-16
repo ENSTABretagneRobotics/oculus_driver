@@ -46,7 +46,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import Extension, setup
+from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -175,7 +175,8 @@ setup(
     author_email="pierre.narvor@ensta-bretagne.fr",
     description="Python wrapper for the oculus_driver library.",
     long_description="",
-    ext_modules=[CMakeExtension("oculus_python")],
+    packages=find_packages(),
+    ext_modules=[CMakeExtension("_oculus_python")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},
