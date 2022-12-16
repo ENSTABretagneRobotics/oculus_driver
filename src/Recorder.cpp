@@ -142,6 +142,12 @@ void FileReader::open(const std::string& filename)
     this->read_next_header();
 }
 
+void FileReader::rewind()
+{
+    file_.seekg(sizeof(fileHeader_));
+    this->read_next_header();
+}
+
 void FileReader::read_next_header() const
 {
     itemPosition_ = file_.tellg();

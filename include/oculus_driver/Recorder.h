@@ -180,6 +180,8 @@ class FileReader
     void open(const std::string& filename);
     void close()         { file_.close(); }
     bool is_open() const { return file_.is_open(); }
+    void rewind();
+
     const blueprint::LogHeader& file_header() const { return fileHeader_; }
 
     std::size_t current_item_position() const { return itemPosition_; }
