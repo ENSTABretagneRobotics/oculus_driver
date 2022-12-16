@@ -1,5 +1,7 @@
 
+import subprocess
 import numpy as np
+import matplotlib.cm as colormaps
 
 class PingRenderer:
 
@@ -16,7 +18,7 @@ class PingRenderer:
     def needs_geometry_update(self, msg):
         if self.masterMode is None:
             return True
-        if msg.masterMode != self.masterMode or msg.range != self.range:
+        if msg.master_mode() != self.masterMode or msg.range() != self.range:
             return True
         return False
 
@@ -83,3 +85,53 @@ class PingRenderer:
         return img
 
 
+# this class needs ffmpeg to be installed
+class VideoEncoder:
+    
+    def __init__(self, videoPath="output.mp4", frameShape=[1280,720], frameRate=10):
+        self.path       = videoPath
+        self.frameShape = frameShape
+        self.colormap   = colormaps.get_cmap('viridis')
+        self.imageData  = np.empty([frameShape[1], frameShape[0],4], dtype=np.uint8)
+
+        # self.encoder = sh.Command("ffmpeg")
+        # self.arguments = ("-y -f rawvideo -pix_fmt argb -s "
+        #                + str(frameShape[0]) + 'x' + str(frameShape[1]) 
+        #                + " -r " + str(frameRate)
+        #                + " -i - -c:v libx264 -profile:v baseline"
+        #                + " -level:v 3 -b:v 2500 -an out_vid.h264").split()
+        # for arg in self.arguments:
+        #     self.encoder = self.encoder.bake(arg)
+
+        # self.command = ("ffmpeg -y"
+        #                + " -f rawvideo -pix_fmt argb"
+        #                + " -s " + str(frameShape[0]) + 'x' + str(frameShape[1]) 
+        #                + " -r " + str(frameRate)
+        #                + " -i - -c:v libx264 -profile:v baseline"
+        #                + " -pix_fmt yuv420p"
+        #                + " -level:v 3 -b:v 2500 -an out_vid.h264")
+        self.command = ("ffmpeg"
+                       + " -f rawvideo -pix_fmt rgba"
+                       + " -s " + str(frameShape[0]) + 'x' + str(frameShape[1]) 
+                       + " -r " + str(frameRate)
+                       + " -i - -c:v libx264 -vf fps=10"
+                       + " -pix_fmt yuv420p"
+                       + " " + self.path)
+        print("Encoder command : '" + self.command + "'", flush=True)
+        self.encoder = subprocess.Popen(self.command, shell=True,
+                                        stdin=subprocess.PIPE)
+        self.renderer = PingRenderer(frameShape[1], frameShape[0])
+        print("Video encoder ready")
+
+    def add_ping(self, msg):
+        img = self.renderer.render(msg)
+        m = np.min(img.ravel())
+        M = np.max(img.ravel())
+        self.imageData[:] = 255*self.colormap((img - m) / (M - m))
+        self.add_frame(self.imageData)
+
+    def add_frame(self, img):
+        self.encoder.stdin.write(img.tobytes())
+
+    def finish(self):
+        self.encoder.terminate()

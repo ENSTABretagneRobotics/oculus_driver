@@ -32,6 +32,10 @@ struct OculusFileReader
         else
             return py::none();
     }
+
+    void rewind() {
+        file_.rewind();
+    }
 };
 
 void init_oculus_python_files(py::module& parentModule)
@@ -86,7 +90,8 @@ void init_oculus_python_files(py::module& parentModule)
         .def(py::init<const std::string&>())
         .def("file_header",       &OculusFileReader::file_header)
         .def("read_next_message", &OculusFileReader::read_next_message)
-        .def("read_next_ping",    &OculusFileReader::read_next_ping);
+        .def("read_next_ping",    &OculusFileReader::read_next_ping)
+        .def("rewind",            &OculusFileReader::rewind);
 }
 
 
