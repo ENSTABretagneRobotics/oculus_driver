@@ -4,16 +4,13 @@ project(oculus_driver_python VERSION 1.2 LANGUAGES CXX)
 find_package(pybind11 REQUIRED)
 
 if(NOT TARGET oculus_driver)
-    find_package(oculus_driver QUIET)
-    if(NOT TARGET oculus_driver)
-    include(FetchContent)
-    FetchContent_Declare(oculus_driver
-        GIT_REPOSITORY https://github.com/ENSTABretagneRobotics/oculus_driver.git
-        GIT_TAG        v1.2
-    )
-    FetchContent_MakeAvailable(oculus_driver)
-    endif()
-endif()
+    # Creating a symlink to top directory (works on windows since cmake 3.13)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E 
+                    create_symlink
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../
+                    ${CMAKE_CURRENT_BINARY_DIR}/oculus_driver_simlink)
+    add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/oculus_driver_simlink)
+endif() 
 
 
 pybind11_add_module(_oculus_python
