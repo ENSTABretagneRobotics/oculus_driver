@@ -189,7 +189,7 @@ class PingWrapper1 : public PingWrapper
     }
     virtual uint32_t ping_data_size() const { return this->metadata().imageSize; }
 
-    virtual bool    has_gains()       const { return this->metadata().fireMessage.flags | 0x4; }
+    virtual bool    has_gains()       const { return this->metadata().fireMessage.flags & 0x4; }
     virtual uint8_t master_mode()     const { return this->metadata().fireMessage.masterMode;  }
     virtual uint8_t sample_size()     const {
         switch(this->metadata().dataSize) {
