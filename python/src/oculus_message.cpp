@@ -78,6 +78,15 @@ void init_oculus_message(py::module& m_)
             return std::chrono::duration_cast<std::chrono::microseconds>(
                 msg->timestamp().time_since_epoch()).count();
         });
+
+        //m_.def("ping_message_from_bytes", [](py::bytes data) {
+        m_.def("ping_message_from_bytes", [](py::bytes data,
+                const oculus::Message::TimePoint& stamp)
+        {
+            auto view = (std::string_view)data;
+            return oculus::PingMessage::Create(view.size(),
+                                               (const uint8_t*)view.data());
+        }, py::arg("data"), py::arg("stamp") = oculus::Message::TimePoint());
 }
 
 

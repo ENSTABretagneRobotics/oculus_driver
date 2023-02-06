@@ -77,6 +77,16 @@ class Message
     static Ptr Create()                      { return Ptr(new Message());       }
     static Ptr Create(const Message&  other) { return Ptr(new Message(other));  }
     static Ptr Create(const ConstPtr& other) { return Ptr(new Message(*other)); }
+    static Ptr Create(unsigned int size, const uint8_t* data, 
+                      const TimePoint& stamp = TimePoint())
+    {
+        auto res = Create();
+        res->timestamp_ = stamp;
+        std::memcpy(&res->header_, data, sizeof(OculusMessageHeader));
+        res->data_.resize(size);
+        std::memcpy(res->data_.data(), data, size);
+        return res;
+    }
 
     Ptr copy() const { return Create(*this); }
     
@@ -340,6 +350,11 @@ class PingMessage
     public:
 
     static Ptr Create(const Message::ConstPtr& msg) { return Ptr(new PingMessage(msg)); }
+    static Ptr Create(unsigned int size, const uint8_t* data, 
+                      const TimePoint& stamp = TimePoint())
+    {
+        return Create(Message::Create(size, data, stamp));
+    }
 
     Message::ConstPtr           message()   const { return pingData_->message();   }
     const OculusMessageHeader&  header()    const { return pingData_->header();    }
