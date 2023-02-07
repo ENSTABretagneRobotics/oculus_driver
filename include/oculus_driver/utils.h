@@ -37,6 +37,17 @@ inline EndPointT remote_from_status(const OculusStatusMsg& status)
         ip_to_string(status.ipAddr)), 52100);
 }
 
+inline bool header_valid(const OculusMessageHeader& header)
+{
+    return header.oculusId == 0x4f53;
+}
+
+inline bool is_ping_message(const OculusMessageHeader& header)
+{
+    return header_valid(header)
+        && header.msgId == messageSimplePingResult;
+}
+
 inline OculusSimpleFireMessage default_ping_config()
 {
     OculusSimpleFireMessage msg;

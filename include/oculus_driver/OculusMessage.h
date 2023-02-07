@@ -24,6 +24,7 @@
 #include <cstring>
 
 #include <oculus_driver/Oculus.h>
+#include <oculus_driver/utils.h>
 
 namespace oculus {
 
@@ -80,9 +81,14 @@ class Message
     static Ptr Create(unsigned int size, const uint8_t* data, 
                       const TimePoint& stamp = TimePoint())
     {
+        OculusMessageHeader header;
+        std::memcpy(&header, data, sizeof(OculusMessageHeader));
+        if(!header_valid(header) || size != header.payloadSize + sizeof(OculusMessageHeader)) {
+            return nullptr;
+        }
         auto res = Create();
+        res->header_ = header;
         res->timestamp_ = stamp;
-        std::memcpy(&res->header_, data, sizeof(OculusMessageHeader));
         res->data_.resize(size);
         std::memcpy(res->data_.data(), data, size);
         return res;
@@ -353,6 +359,11 @@ class PingMessage
     static Ptr Create(unsigned int size, const uint8_t* data, 
                       const TimePoint& stamp = TimePoint())
     {
+        OculusMessageHeader header;
+        std::memcpy(&header, data, sizeof(OculusMessageHeader));
+        if(!is_ping_message(header) || size != header.payloadSize + sizeof(OculusMessageHeader)) {
+            return nullptr;
+        }
         return Create(Message::Create(size, data, stamp));
     }
 
