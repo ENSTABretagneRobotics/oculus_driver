@@ -22,6 +22,7 @@ using namespace std;
 
 #include <oculus_driver/AsyncService.h>
 #include <oculus_driver/SonarDriver.h>
+#include <oculus_driver/Recorder.h>
 using namespace oculus;
 
 void print_ping(const OculusSimplePingResult& pingMetadata,
@@ -61,6 +62,11 @@ void print_all(const Message::ConstPtr& msg)
 
 }
 
+void recorder_callback(const Recorder* recorder,
+                       const Message::ConstPtr& msg)
+{
+    recorder->write(msg);
+}
 
 int main()
 {
@@ -74,26 +80,14 @@ int main()
 
     ioService.start();
 
-    // sonar.on_next_ping([](const SonarDriver::PingResult& pingMetadata,
-    //                       const std::vector<uint8_t>& data){
-    //     std::cout << "Got awaited ping !" << std::endl;
-    // });
-    cout << "After awaited ping" << endl;
-    
-    // stopping sonar firing
-    auto config = default_ping_config();
-    config.pingRate = pingRateStandby;
-    sonar.send_ping_config(config);
-    sonar.on_next_dummy([](const OculusMessageHeader& header) {
-        std::cout << "Got awaited dummy !" << std::endl;
-    });
-    std::cout << "After awaited dummy" << std::endl;
-    
-    //sonar.on_next_status([](const OculusStatusMsg& msg) {
-    //    std::cout << "Got awaited status !" << std::endl;
-    //});
-    std::cout << "After awaited status" << std::endl;
+    Recorder recorder;
+    recorder.open("output.oculus", true);
+
+    sonar.add_message_callback(std::bind(recorder_callback, &recorder, std::placeholders::_1));
+
     getchar();
+
+    recorder.close();
 
     ioService.stop();
 

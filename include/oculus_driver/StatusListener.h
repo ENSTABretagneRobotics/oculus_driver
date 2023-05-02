@@ -21,9 +21,7 @@
 
 #include <iostream>
 
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
 
 #include <oculus_driver/Oculus.h>
 #include <oculus_driver/CallbackQueue.h>
@@ -55,13 +53,9 @@ class StatusListener
 
     StatusListener(const IoServicePtr& service, unsigned short listeningPort = 52102);
     
-    template <typename F, class... Args>
-    CallbackId add_callback(F&& func, Args&&... args);
-    CallbackId add_callback(const CallbackT& callback);
-    bool remove_callback(CallbackId index);
-    template <typename F, class... Args>
-    bool on_next_status(F&& func, Args&&... args);
-    bool on_next_status(const CallbackT& callback);
+    unsigned int add_callback(const std::function<void(const OculusStatusMsg&)>& callback);
+    bool remove_callback(unsigned int index);
+    bool on_next_status(const std::function<void(const OculusStatusMsg&)>& callback);
 
     template <typename T = float>
     T time_since_last_status() const { return clock_.now<T>(); }
@@ -71,21 +65,6 @@ class StatusListener
     void get_one_message();
     void message_callback(const boost::system::error_code& err, std::size_t bytesReceived);
 };
-
-template <typename F, class... Args>
-StatusListener::CallbackId StatusListener::add_callback(F&& func, Args&&... args)
-{
-    // static_cast is to avoid infinite loop at type resolution at compile time
-    return this->add_callback(static_cast<const CallbackT&>(
-        std::bind(func, args..., std::placeholders::_1)));
-}
-
-template <typename F, class... Args>
-bool StatusListener::on_next_status(F&& func, Args&&... args)
-{
-    return this->on_next_status(static_cast<const CallbackT&>(
-        std::bind(func, args..., std::placeholders::_1)));
-}
 
 } //namespace oculus
 

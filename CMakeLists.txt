@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
-project(oculus_driver VERSION 1.0)
+project(oculus_driver VERSION 1.2.1)
 
 option(BUILD_TESTS "Build unit tests" OFF)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DefaultBuildType.cmake)
 
 find_package(Boost COMPONENTS system thread REQUIRED)
 
@@ -11,6 +12,7 @@ add_library(oculus_driver SHARED
     src/SonarClient.cpp
     src/SonarDriver.cpp
     src/AsyncService.cpp
+    src/Recorder.cpp
 )
 set_target_properties(oculus_driver PROPERTIES
     PUBLIC_HEADER "${oculus_driver_headers}"

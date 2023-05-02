@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/asio.hpp>
 
 #include <oculus_driver/Oculus.h>
@@ -36,6 +35,17 @@ inline EndPointT remote_from_status(const OculusStatusMsg& status)
     // endianess. (fix this)
     return EndPointT(boost::asio::ip::address_v4::from_string(
         ip_to_string(status.ipAddr)), 52100);
+}
+
+inline bool header_valid(const OculusMessageHeader& header)
+{
+    return header.oculusId == 0x4f53;
+}
+
+inline bool is_ping_message(const OculusMessageHeader& header)
+{
+    return header_valid(header)
+        && header.msgId == messageSimplePingResult;
 }
 
 inline OculusSimpleFireMessage default_ping_config()
@@ -111,6 +121,25 @@ inline bool check_config_feedback(const OculusSimpleFireMessage& requested,
     }
     return false;
 }
+
+inline bool config_changed(const OculusSimpleFireMessage& previous,
+                           const OculusSimpleFireMessage& next)
+{
+
+    if(previous.masterMode      !=  next.masterMode)      return true;
+    if(previous.pingRate        !=  next.pingRate)        return true;
+    if(previous.networkSpeed    !=  next.networkSpeed)    return true;
+    if(previous.gammaCorrection !=  next.gammaCorrection) return true;
+    if(previous.flags           !=  next.flags)           return true;
+
+    if(abs(previous.range        - next.range)        > 0.001) return true;
+    if(abs(previous.gainPercent  - next.gainPercent)  > 0.1)   return true;
+    if(abs(previous.speedOfSound - next.speedOfSound) > 0.1)   return true;
+    if(abs(previous.salinity     - next.salinity)     > 0.1)   return true;
+
+    return false;
+}
+
 } //namespace oculus
 
 #endif //_DEF_OCULUS_DRIVER_UTILS_H_

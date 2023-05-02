@@ -70,23 +70,28 @@ SonarDriver::PingConfig SonarDriver::last_ping_config() const
 
 SonarDriver::PingConfig SonarDriver::current_ping_config()
 {
+    using Timeout = CallbackQueue<const Message::ConstPtr&>::TimeoutReached;
+
     PingConfig config;
-    if(!this->on_next_message([&](const OculusMessageHeader& header,
-                                  const std::vector<uint8_t>& data) {
+
+    auto configSetter = [&](const Message::ConstPtr& message) {
         // lastConfig_ is ALWAYS updated before the callbacks are called.
         // We only need to wait for the next message to get the current ping
         // configuration.
         config = lastConfig_;
-        config.head = header;
-    }))
-    {
-        throw MessageCallbacks::TimeoutReached();
+        config.head = message->header();
+    };
+    if(!this->on_next_message(configSetter)) {
+        throw Timeout();
     }
     return config;
 }
 
-SonarDriver::PingConfig SonarDriver::request_ping_config(const PingConfig& request)
+SonarDriver::PingConfig SonarDriver::request_ping_config(PingConfig request)
 {
+    request.flags |= 0x4; // forcing sonar sending gains to true
+    using Timeout = CallbackQueue<const Message::ConstPtr&>::TimeoutReached;
+
     // Waiting for a ping or a dummy message to have a feedback on the config changes.
     PingConfig feedback;
     int count = 0;
@@ -98,7 +103,7 @@ SonarDriver::PingConfig SonarDriver::request_ping_config(const PingConfig& reque
                 if(check_config_feedback(request, feedback))
                     break;
             }
-            catch(const MessageCallbacks::TimeoutReached& e) {
+            catch(const Timeout& e) {
                 std::cerr << "Timeout reached while requesting config" << std::endl;
                 continue;
             }
@@ -150,42 +155,43 @@ void SonarDriver::on_connect()
 /**
  * Called when a new complete message is received (any type).
  */
-void SonarDriver::handle_message(const OculusMessageHeader& header,
-                                 const std::vector<uint8_t>& data)
+void SonarDriver::handle_message(const Message::ConstPtr& message)
 {
-    // Setting lastConfig_ BEFORE calling any callback.
+    const auto& header = message->header();
+    const auto& data   = message->data();
+    OculusSimpleFireMessage newConfig = lastConfig_;
     switch(header.msgId) {
         case messageSimplePingResult:
-            {
-                // Overwritting pingRate. The feedback of the sonar on this
-                // parameter is broken.  lastConfig_.pingRate have been set in
-                // send_ping_config().  (Bracket block is to keep the temporary
-                // lastPingRate variable local to this block.)
-                auto lastPingRate = lastConfig_.pingRate;
-                lastConfig_ = reinterpret_cast<const PingResult*>(data.data())->fireMessage;
-                lastConfig_.pingRate = lastPingRate;
-            }
+            newConfig = reinterpret_cast<const OculusSimplePingResult*>(data.data())->fireMessage;
+            newConfig.pingRate = lastConfig_.pingRate; // feedback is broken on pingRate
             // When masterMode = 2, the sonar force gainPercent between 40& and
             // 100%, BUT still needs resquested gainPercent to be between 0%
             // and 100%. (If you request a gainPercent=0 in masterMode=2, the
             // fireMessage in the ping results will be 40%). The gainPercent is
             // rescaled here to ensure consistent parameter handling on client
             // side).
-            if(lastConfig_.masterMode == 2) {
-                lastConfig_.gainPercent = (lastConfig_.gainPercent - 40.0) * 100.0 / 60.0;
+            if(newConfig.masterMode == 2) {
+                newConfig.gainPercent = (newConfig.gainPercent - 40.0) * 100.0 / 60.0;
             }
             break;
+        case messageDummy:
+            newConfig.pingRate = pingRateStandby;
+            break;
         default:
-            lastConfig_.pingRate = pingRateStandby;
             break;
     };
 
+    if(config_changed(lastConfig_, newConfig)) {
+        configCallbacks_.call(lastConfig_, newConfig);
+    }
+    lastConfig_ = newConfig;
+
     // Calling generic message callbacks first (in case we want to do something
     // before calling the specialized callbacks).
-    messageCallbacks_.call(header, data);
+    messageCallbacks_.call(message);
     switch(header.msgId) {
         case messageSimplePingResult:
-            pingCallbacks_.call(*(reinterpret_cast<const PingResult*>(data.data())), data);
+            pingCallbacks_.call(PingMessage::Create(message));
             break;
         case messageDummy:
             dummyCallbacks_.call(header);
@@ -204,56 +210,8 @@ void SonarDriver::handle_message(const OculusMessageHeader& header,
     }
 }
 
-// status callbacks
-unsigned int SonarDriver::add_status_callback(const StatusListener::CallbackT& callback)
-{
-    return statusListener_.add_callback(callback);
-}
-
-bool SonarDriver::remove_status_callback(unsigned int callbackId)
-{
-    return statusListener_.remove_callback(callbackId);
-}
-
-bool SonarDriver::on_next_status(const StatusListener::CallbackT& callback)
-{
-    return statusListener_.on_next_status(callback);
-}
-
-// ping callbacks
-unsigned int SonarDriver::add_ping_callback(const PingCallbacks::CallbackT& callback)
-{
-    return pingCallbacks_.add_callback(callback);
-}
-
-bool SonarDriver::remove_ping_callback(unsigned int callbackId)
-{
-    return pingCallbacks_.remove_callback(callbackId);
-}
-
-bool SonarDriver::on_next_ping(const PingCallbacks::CallbackT& callback)
-{
-    return pingCallbacks_.add_single_shot(callback);
-}
-
-// dummy callbacks
-unsigned int SonarDriver::add_dummy_callback(const DummyCallbacks::CallbackT& callback)
-{
-    return dummyCallbacks_.add_callback(callback);
-}
-
-bool SonarDriver::remove_dummy_callback(unsigned int callbackId)
-{
-    return dummyCallbacks_.remove_callback(callbackId);
-}
-
-bool SonarDriver::on_next_dummy(const DummyCallbacks::CallbackT& callback)
-{
-    return dummyCallbacks_.add_single_shot(callback);
-}
-
 // message callbacks
-unsigned int SonarDriver::add_message_callback(const MessageCallbacks::CallbackT& callback)
+unsigned int SonarDriver::add_message_callback(const MessageCallback& callback)
 {
     return messageCallbacks_.add_callback(callback);
 }
@@ -263,9 +221,57 @@ bool SonarDriver::remove_message_callback(unsigned int callbackId)
     return messageCallbacks_.remove_callback(callbackId);
 }
 
-bool SonarDriver::on_next_message(const MessageCallbacks::CallbackT& callback)
+bool SonarDriver::on_next_message(const MessageCallback& callback)
 {
     return messageCallbacks_.add_single_shot(callback);
+}
+
+// status callbacks
+unsigned int SonarDriver::add_status_callback(const StatusCallback& callback)
+{
+    return statusListener_.add_callback(callback);
+}
+
+bool SonarDriver::remove_status_callback(unsigned int callbackId)
+{
+    return statusListener_.remove_callback(callbackId);
+}
+
+bool SonarDriver::on_next_status(const StatusCallback& callback)
+{
+    return statusListener_.on_next_status(callback);
+}
+
+// ping callbacks
+unsigned int SonarDriver::add_ping_callback(const PingCallback& callback)
+{
+    return pingCallbacks_.add_callback(callback);
+}
+
+bool SonarDriver::remove_ping_callback(unsigned int callbackId)
+{
+    return pingCallbacks_.remove_callback(callbackId);
+}
+
+bool SonarDriver::on_next_ping(const PingCallback& callback)
+{
+    return pingCallbacks_.add_single_shot(callback);
+}
+
+// dummy callbacks
+unsigned int SonarDriver::add_dummy_callback(const DummyCallback& callback)
+{
+    return dummyCallbacks_.add_callback(callback);
+}
+
+bool SonarDriver::remove_dummy_callback(unsigned int callbackId)
+{
+    return dummyCallbacks_.remove_callback(callbackId);
+}
+
+bool SonarDriver::on_next_dummy(const DummyCallback& callback)
+{
+    return dummyCallbacks_.add_single_shot(callback);
 }
 
 /**
@@ -274,8 +280,13 @@ bool SonarDriver::on_next_message(const MessageCallbacks::CallbackT& callback)
  */
 bool SonarDriver::wait_next_message()
 {
-    auto dummy = [](const OculusMessageHeader&, const std::vector<uint8_t>&) {};
+    auto dummy = [](const Message::ConstPtr&) {};
     return this->on_next_message(dummy);
+}
+
+unsigned int SonarDriver::add_config_callback(const ConfigCallback& callback)
+{
+    return configCallbacks_.add_callback(callback);
 }
 
 } //namespace oculus

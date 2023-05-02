@@ -29,14 +29,14 @@
 #include <chrono>
 #include <type_traits>
 
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
 
 #include <oculus_driver/Oculus.h>
 #include <oculus_driver/utils.h>
 #include <oculus_driver/print_utils.h>
 #include <oculus_driver/StatusListener.h>
+
+#include <oculus_driver/OculusMessage.h>
 
 namespace oculus {
 
@@ -67,8 +67,8 @@ class SonarClient
 
     enum ConnectionState { Initializing, Attempt, Connected, Lost };
 
-    using TimeSource = std::chrono::system_clock;
-    using TimePoint  = typename std::invoke_result<decltype(&TimeSource::now)>::type;
+    using TimeSource = Message::TimeSource;
+    using TimePoint  = Message::TimePoint;
 
     protected:
     
@@ -83,13 +83,10 @@ class SonarClient
     boost::asio::deadline_timer  checkerTimer_;
     Clock                        clock_;
     
-    StatusListener             statusListener_;
-    StatusListener::CallbackId statusCallbackId_;
+    StatusListener statusListener_;
+    unsigned int   statusCallbackId_;
 
-    OculusMessageHeader    initialHeader_;
-    std::vector<uint8_t>   data_;
-
-    TimePoint recvTime_;
+    Message::Ptr message_;
 
     // helper stubs
     void checker_callback(const boost::system::error_code& err);
@@ -109,7 +106,7 @@ class SonarClient
     void reset_connection();
     void close_connection();
     void on_first_status(const OculusStatusMsg& msg);
-    void on_connect(const boost::system::error_code& err);
+    void connect_callback(const boost::system::error_code& err);
     virtual void on_connect();
 
     // main loop begin
@@ -121,13 +118,12 @@ class SonarClient
     
     // This is called regardless of the content of the message.
     // To be reimplemented in a subclass (does nothing by default).
-    virtual void handle_message(const OculusMessageHeader& header,
-                                const std::vector<uint8_t>& data);
+    virtual void handle_message(const Message::ConstPtr& msg);
 
     template <typename TimeT = float>
     TimeT time_since_last_message() const { return clock_.now<TimeT>(); }
 
-    TimePoint last_header_stamp() const { return recvTime_; }
+    TimePoint last_header_stamp() const { return message_->timestamp(); }
 };
 
 } //namespace oculus
