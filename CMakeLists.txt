@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(oculus_driver VERSION 1.2.1)
 
 option(BUILD_TESTS "Build unit tests" OFF)
+option(BUILD_PYTHON "Build python bindings" OFF)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DefaultBuildType.cmake)
 
 find_package(Boost COMPONENTS system thread REQUIRED)
@@ -73,6 +74,10 @@ export(EXPORT ${PROJECT_NAME}Targets
 
 if(BUILD_TESTS)
     add_subdirectory(tests)
+endif()
+
+if(BUILD_PYTHON)
+    add_subdirectory(python)
 endif()
 
 
