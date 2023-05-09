@@ -1,4 +1,8 @@
 .*.sw*
+*.so
+
 build
-*.oculus
-*.mp4
+__pycache__
+oculus_python.egg-info/
+
+.vscode

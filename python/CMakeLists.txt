@@ -21,3 +21,4 @@ pybind11_add_module(_oculus_python
 target_link_libraries(_oculus_python PUBLIC
     oculus_driver
 )
+
